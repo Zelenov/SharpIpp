@@ -4,8 +4,8 @@
 C# implementation of (Internet Printing Protocol/1.1)[https://tools.ietf.org/html/rfc2911]. It can print! And do other stuff with any printer, conencted via Internet.
 
 `SharpIpp` is still in development. Currently available operations are
-* (Print-Job)[https://tools.ietf.org/html/rfc2911#section-3.2]
-* (Get-Printer-Attributes)[https://tools.ietf.org/html/rfc2911#section-3.2.5]
+* [Print-Job](https://tools.ietf.org/html/rfc2911#section-3.2)
+* [Get-Printer-Attributes](https://tools.ietf.org/html/rfc2911#section-3.2.5)
 
 ## Installation
 Available on [nuget][SharpIpp.nuget]
