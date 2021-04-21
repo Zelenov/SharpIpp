@@ -18,6 +18,8 @@
     </PackageLicenseExpression>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <Copyright>Evgeny Zelenov</Copyright>
+     <RepositoryUrl>https://github.com/Zelenov/SharpIpp.git</RepositoryUrl> 
+    <RepositoryType>git</RepositoryType> 
   </PropertyGroup>
 
   <ItemGroup>

@@ -1,7 +1,8 @@
 # SharpIpp
 ![SharpIpp Icon][SharpIpp.icon]
 </br>
-C# implementation of (Internet Printing Protocol/1.1)[https://tools.ietf.org/html/rfc2911]. It can print! And do other stuff with any printer, conencted via Internet.
+C# implementation of [Internet Printing Protocol/1.1](https://tools.ietf.org/html/rfc2911).
+It can print! And do other stuff with any printer, conencted via Internet.
 
 `SharpIpp` is still in development. Currently available operations are
 * [Print-Job](https://tools.ietf.org/html/rfc2911#section-3.2)
