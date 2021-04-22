@@ -1,4 +1,6 @@
-﻿namespace SharpIpp.Model
+﻿using System.Collections.Generic;
+
+namespace SharpIpp.Model
 {
     public class PrintJobResponse
     {
@@ -34,5 +36,7 @@
         ///     number-of-intervening-jobs
         /// </summary>
         public int? NumberOfInterveningJobs { get; set; }
+
+        public IDictionary<string, IppAttribute[]> AllAttributes { get; set; } = null!;
     }
 }

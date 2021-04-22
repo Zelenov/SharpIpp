@@ -2,7 +2,7 @@
 
 namespace SharpIpp.Protocol.Extensions
 {
-    public static class BinaryWriterExtensions
+    internal static class BinaryWriterExtensions
     {
         public static void WriteBigEndian(this BinaryWriter writer, short value)
         {

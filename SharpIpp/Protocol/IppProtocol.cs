@@ -1,8 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using SharpIpp.Exceptions;
 using SharpIpp.Model;
 using SharpIpp.Protocol.Extensions;
 
@@ -15,24 +16,29 @@ namespace SharpIpp.Protocol
         private IppResponse ReadStream(Stream stream)
         {
             var res = new IppResponse();
-            using var reader = new BinaryReader(stream, Encoding.ASCII, true);
-            res.Version = (IppVersion) reader.ReadInt16BigEndian();
-            res.StatusCode = (IppStatusCode) reader.ReadInt16BigEndian();
-            res.RequestId = reader.ReadInt32BigEndian();
-            while (stream.Position != stream.Length)
-                if (!ReadSection(reader, res))
-                    break;
-
-            return res;
+            try
+            {
+                using var reader = new BinaryReader(stream, Encoding.ASCII, true);
+                res.Version = (IppVersion) reader.ReadInt16BigEndian();
+                res.StatusCode = (IppStatusCode) reader.ReadInt16BigEndian();
+                res.RequestId = reader.ReadInt32BigEndian();
+                ReadSection(reader, res);
+                return res;
+            }
+            catch (Exception ex)
+            {
+                throw new IppResponseException(
+                    $"Failed to parse ipp response. Current response parsing ended on: \n{res}", ex, res);
+            }
         }
 
-        private bool ReadSection(BinaryReader reader, IppResponse res)
+        private void ReadSection(BinaryReader reader, IppResponse res)
         {
             var delimiter = reader.ReadByte();
             var sectionDelimiter = delimiter;
             //https://tools.ietf.org/html/rfc8010#section-3.5.1
             if (sectionDelimiter > 0x0f)
-                return false;
+                throw new ArgumentException($"Section start tag not found in stream. Expected < 0x0f. Actual: {sectionDelimiter}");
 
             IppAttribute? prevAttribute = null;
             do
@@ -40,7 +46,7 @@ namespace SharpIpp.Protocol
                 delimiter = reader.ReadByte();
                 switch (delimiter)
                 {
-                    case 0x03: return true;
+                    case 0x03: return;
                     case var n when n <= 0x0f:
                         sectionDelimiter = delimiter;
                         break;
@@ -141,12 +147,14 @@ namespace SharpIpp.Protocol
                 case Tag.RangeOfInteger:
                     return ReadRange(stream);
                 case Tag.BegCollection:
-                    return ReadString(stream); //TODO: collection https://tools.ietf.org/html/rfc8010#section-3.1.6
+                    //TODO: collection https://tools.ietf.org/html/rfc8010#section-3.1.6
+                    return ReadString(stream);
                 case Tag.TextWithLanguage:
                 case Tag.NameWithLanguage:
                     return ReadStringWithLanguage(stream);
                 case Tag.EndCollection:
-                    return ReadNoValue(stream); //TODO: collection https://tools.ietf.org/html/rfc8010#section-3.1.6
+                    //TODO: collection https://tools.ietf.org/html/rfc8010#section-3.1.6
+                    return ReadNoValue(stream);
                 case Tag.TextWithoutLanguage:
                 case Tag.NameWithoutLanguage:
                 case Tag.Keyword:
@@ -159,52 +167,54 @@ namespace SharpIpp.Protocol
                     return ReadString(stream);
 
 
-                case Tag.OctetStringUnassigned3:
-                case Tag.OctetStringUnassigned4:
-                case Tag.OctetStringUnassigned5:
-                case Tag.OctetStringUnassigned6:
-                case Tag.OctetStringUnassigned7:
-                case Tag.OctetStringUnassigned8:
+                case Tag.OctetStringUnassigned38:
+                case Tag.OctetStringUnassigned39:
+                case Tag.OctetStringUnassigned3A:
+                case Tag.OctetStringUnassigned3B:
+                case Tag.OctetStringUnassigned3C:
+                case Tag.OctetStringUnassigned3D:
+                case Tag.OctetStringUnassigned3E:
+                case Tag.OctetStringUnassigned3F:
                     return ReadString(stream);
 
-                case Tag.IntegerUnassigned1:
-                case Tag.IntegerUnassigned2:
-                case Tag.IntegerUnassigned3:
-                case Tag.IntegerUnassigned4:
-                case Tag.IntegerUnassigned5:
-                case Tag.IntegerUnassigned6:
-                case Tag.IntegerUnassigned7:
-                case Tag.IntegerUnassigned8:
-                case Tag.IntegerUnassigned9:
-                case Tag.IntegerUnassigned10:
-                case Tag.IntegerUnassigned11:
-                case Tag.IntegerUnassigned12:
-                case Tag.IntegerUnassigned13:
+                case Tag.IntegerUnassigned20:
+                case Tag.IntegerUnassigned24:
+                case Tag.IntegerUnassigned25:
+                case Tag.IntegerUnassigned26:
+                case Tag.IntegerUnassigned27:
+                case Tag.IntegerUnassigned28:
+                case Tag.IntegerUnassigned29:
+                case Tag.IntegerUnassigned2A:
+                case Tag.IntegerUnassigned2B:
+                case Tag.IntegerUnassigned2C:
+                case Tag.IntegerUnassigned2D:
+                case Tag.IntegerUnassigned2E:
+                case Tag.IntegerUnassigned2F:
                     return ReadInt(stream);
 
-                case Tag.StringUnassigned1:
-                case Tag.StringUnassigned2:
-                case Tag.StringUnassigned3:
-                case Tag.StringUnassigned4:
-                case Tag.StringUnassigned5:
-                case Tag.StringUnassigned6:
-                case Tag.StringUnassigned7:
-                case Tag.StringUnassigned8:
-                case Tag.StringUnassigned9:
-                case Tag.StringUnassigned10:
-                case Tag.StringUnassigned11:
-                case Tag.StringUnassigned12:
-                case Tag.StringUnassigned13:
-                case Tag.StringUnassigned14:
-                case Tag.StringUnassigned15:
-                case Tag.StringUnassigned16:
-                case Tag.StringUnassigned17:
-                case Tag.StringUnassigned18:
-                case Tag.StringUnassigned19:
-                case Tag.StringUnassigned20:
-                case Tag.StringUnassigned21:
-                case Tag.StringUnassigned22:
-                case Tag.StringUnassigned23:
+                case Tag.StringUnassigned40:
+                case Tag.StringUnassigned43:
+                case Tag.StringUnassigned4B:
+                case Tag.StringUnassigned4C:
+                case Tag.StringUnassigned4D:
+                case Tag.StringUnassigned4E:
+                case Tag.StringUnassigned4F:
+                case Tag.StringUnassigned50:
+                case Tag.StringUnassigned51:
+                case Tag.StringUnassigned52:
+                case Tag.StringUnassigned53:
+                case Tag.StringUnassigned54:
+                case Tag.StringUnassigned55:
+                case Tag.StringUnassigned56:
+                case Tag.StringUnassigned57:
+                case Tag.StringUnassigned58:
+                case Tag.StringUnassigned59:
+                case Tag.StringUnassigned5A:
+                case Tag.StringUnassigned5B:
+                case Tag.StringUnassigned5C:
+                case Tag.StringUnassigned5D:
+                case Tag.StringUnassigned5E:
+                case Tag.StringUnassigned5F:
                     return ReadString(stream);
                 default: throw new ArgumentException($"Ipp tag {tag} not supported");
             }
@@ -216,22 +226,38 @@ namespace SharpIpp.Protocol
             var name = Encoding.ASCII.GetString(stream.ReadBytes(len));
             var value = ReadValue(stream, tag);
             var normalizedName = string.IsNullOrEmpty(name) && prevAttribute != null ? prevAttribute.Name : name;
+            if (string.IsNullOrEmpty(normalizedName))
+                throw new ArgumentException("0 length attribute name found not in a 1setOf");
+
             var attribute = new IppAttribute(tag, normalizedName, value);
-            //!!
-            //Console.WriteLine($"{tag} {name} {attribute}");
             return attribute;
         }
 
-        public void Write(IEnumerable<IppAttribute> attributes, BinaryWriter writer)
+        public void Write(IppRequest request, BinaryWriter writer)
         {
+            writer.WriteBigEndian((short) request.IppVersion);
+            writer.WriteBigEndian((short) request.IppOperation);
+            writer.WriteBigEndian(request.RequestId);
+
             //operation-attributes-tag https://tools.ietf.org/html/rfc8010#section-3.5.1
+            var attributes = request.OperationAttributes.Select(x => (Tag.OperationAttributesTag, x))
+               .Concat(request.JobAttributes.Select(x => (Tag.JobAttributesTag, x)))
+               .ToArray();
+            if (!attributes.Any())
+                return;
+
             writer.Write((byte) Tag.OperationAttributesTag);
             IppAttribute? prevAttribute = null;
-            foreach (var ippAttribute in attributes)
+            Tag? prevTag = null;
+            foreach (var (ippTag, ippAttribute) in attributes)
             {
+                if (prevTag == null || ippTag != prevTag)
+                    writer.Write((byte) ippTag);
+
                 var isSet = prevAttribute != null && ippAttribute.Name == prevAttribute.Name;
                 Write(writer, ippAttribute, isSet);
                 prevAttribute = ippAttribute;
+                prevTag = ippTag;
             }
 
             //end-of-attributes-tag https://tools.ietf.org/html/rfc8010#section-3.5.1

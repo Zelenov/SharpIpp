@@ -13,17 +13,30 @@ namespace SharpIpp.Protocol
 
         public void Write(NoValue value, BinaryWriter stream)
         {
+            stream.WriteBigEndian((short) 0);
         }
 
-        public NoValue ReadNoValue(BinaryReader stream) => new NoValue();
+        public NoValue ReadNoValue(BinaryReader stream)
+        {
+            var length = stream.ReadInt16BigEndian();
+            if (length != 0)
+                throw new ArgumentException($"Expected no-value length: 0, actual :{length}");
+
+            return new NoValue();
+        }
 
         public void Write(bool value, BinaryWriter stream)
         {
+            stream.WriteBigEndian((short) 1);
             stream.Write(value ? 0x01 : 0x00);
         }
 
         public bool ReadBool(BinaryReader stream)
         {
+            var length = stream.ReadInt16BigEndian();
+            if (length != 1)
+                throw new ArgumentException($"Expected bool value length: 1, actual :{length}");
+
             var value = stream.ReadByte();
             if (value == 0x00)
                 return false;
@@ -90,7 +103,7 @@ namespace SharpIpp.Protocol
 
         public void Write(Range value, BinaryWriter stream)
         {
-            stream.WriteBigEndian(8);
+            stream.WriteBigEndian((short) 8);
             stream.WriteBigEndian(value.Lower);
             stream.WriteBigEndian(value.Upper);
         }
@@ -140,12 +153,14 @@ namespace SharpIpp.Protocol
 
         public void Write(StringWithLanguage value, BinaryWriter stream)
         {
+            stream.WriteBigEndian((short) (value.Language.Length + value.Value.Length));
             Write(value.Language, stream);
             Write(value.Value, stream);
         }
 
         public StringWithLanguage ReadStringWithLanguage(BinaryReader stream)
         {
+            var length = stream.ReadInt16BigEndian();
             var language = ReadString(stream);
             var value = ReadString(stream);
             return new StringWithLanguage(language, value);

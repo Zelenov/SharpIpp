@@ -11,46 +11,68 @@ namespace SharpIpp.Protocol
 {
     internal partial class IppProtocol
     {
-     
         /// <summary>
-        /// Print-Job Request
-        /// https://tools.ietf.org/html/rfc2911#section-3.2.1.1
+        ///     Print-Job Request
+        ///     https://tools.ietf.org/html/rfc2911#section-3.2.1.1
         /// </summary>
         /// <param name="request"></param>
         /// <param name="stream"></param>
         public void Write(PrintJobRequest request, Stream stream)
         {
-            using var writer = new BinaryWriter(stream, Encoding.ASCII, true);
-            var attributes = new IEnumerable<IppAttribute>?[]
-            {
-                new [] { new IppAttribute(Tag.Charset, "attributes-charset", "utf-8")},
-                new [] { new IppAttribute(Tag.NaturalLanguage, "attributes-natural-language", "en")},
-                new [] { new IppAttribute(Tag.Uri, "printer-uri", request.PrinterUri.ToString())},
-                request.JobName == null ? null : new [] { new IppAttribute(Tag.NameWithoutLanguage, "job-name", request.JobName)},
-                request.IppAttributeFidelity == null ? null : new [] { new IppAttribute(Tag.Boolean, "ipp-attribute-fidelity", request.IppAttributeFidelity)},
-                request.DocumentName == null ? null : new [] { new IppAttribute(Tag.NameWithoutLanguage, "document-name", request.DocumentName)},
-                request.DocumentFormat == null ? null : new [] { new IppAttribute(Tag.MimeMediaType, "document-format", request.DocumentFormat)},
-                request.DocumentNaturalLanguage == null ? null : new [] { new IppAttribute(Tag.NaturalLanguage, "document-natural-language", request.DocumentNaturalLanguage)},
-                request.JobPriority == null ? null : new [] { new IppAttribute(Tag.Integer, "job-priority", request.JobPriority)},
-                request.JobHoldUntil == null ? null : new [] { new IppAttribute(Tag.NameWithoutLanguage, "job-hold-until", Mapper.Map<string>(request.JobHoldUntil))},
-                request.MultipleDocumentHandling == null ? null : new [] { new IppAttribute(Tag.NameWithoutLanguage, "multiple-document-handling", Mapper.Map<string>(request.MultipleDocumentHandling))},
-                request.Copies == null ? null : new [] { new IppAttribute(Tag.Integer, "copies", request.Copies)},
-                request.Finishings == null ? null : new [] { new IppAttribute(Tag.Integer, "finishings", Mapper.Map<string>(request.Finishings))},
-                request.PageRanges?.Select(pageRange=> new IppAttribute(Tag.Integer, "page-ranges", pageRange)),
-                request.Sides == null ? null : new [] { new IppAttribute(Tag.NameWithoutLanguage, "sides", Mapper.Map<string>(request.Sides)) },
-                request.NumberUp == null ? null : new [] { new IppAttribute(Tag.Integer, "number-up", request.NumberUp) },
-                request.OrientationRequested == null ? null : new [] { new IppAttribute(Tag.NameWithoutLanguage, "orientation-requested", Mapper.Map<string>(request.OrientationRequested)) },
-                request.Media == null ? null : new [] { new IppAttribute(Tag.NameWithoutLanguage, "media", Mapper.Map<string>(request.Media)) },
-                request.PrinterResolution == null ? null : new [] { new IppAttribute(Tag.NameWithoutLanguage, "printer-resolution", request.PrinterResolution) },
-                request.PrintQuality == null ? null : new [] { new IppAttribute(Tag.NameWithoutLanguage, "print-quality", Mapper.Map<string>(request.PrintQuality)) },
-            }.Where(s => s != null).SelectMany(s=>s).Cast<IppAttribute>().ToArray();
+            var r = Mapper.Map<IppRequest>(request);
+            var operation = r.OperationAttributes;
+            var job = r.JobAttributes;
+            operation.Add(new IppAttribute(Tag.Charset, "attributes-charset", "utf-8"));
+            operation.Add(new IppAttribute(Tag.NaturalLanguage, "attributes-natural-language", "en"));
+            operation.Add(new IppAttribute(Tag.Uri, "printer-uri", request.PrinterUri.ToString()));
+            if (request.JobName != null)
+                operation.Add(new IppAttribute(Tag.NameWithoutLanguage, "job-name", request.JobName));
+            if (request.IppAttributeFidelity != null)
+                operation.Add(new IppAttribute(Tag.Boolean, "ipp-attribute-fidelity",
+                    request.IppAttributeFidelity.Value));
+            if (request.DocumentName != null)
+                operation.Add(new IppAttribute(Tag.NameWithoutLanguage, "document-name", request.DocumentName));
+            if (request.DocumentFormat != null)
+                operation.Add(new IppAttribute(Tag.MimeMediaType, "document-format", request.DocumentFormat));
+            if (request.DocumentNaturalLanguage != null)
+                operation.Add(new IppAttribute(Tag.NaturalLanguage, "document-natural-language",
+                    request.DocumentNaturalLanguage));
+            if (request.JobPriority != null)
+                job.Add(new IppAttribute(Tag.Integer, "job-priority", request.JobPriority.Value));
+            if (request.JobHoldUntil != null)
+                job.Add(new IppAttribute(Tag.NameWithoutLanguage, "job-hold-until",
+                    Mapper.Map<string>(request.JobHoldUntil.Value)));
+            if (request.MultipleDocumentHandling != null)
+                job.Add(new IppAttribute(Tag.Keyword, "multiple-document-handling",
+                    Mapper.Map<string>(request.MultipleDocumentHandling.Value)));
+            if (request.Copies != null)
+                job.Add(new IppAttribute(Tag.Integer, "copies", request.Copies.Value));
+            if (request.Finishings != null)
+                job.Add(new IppAttribute(Tag.Enum, "finishings", (int) request.Finishings.Value));
+            if (request.PageRanges != null)
+                job.AddRange(request.PageRanges.Select(pageRange =>
+                    new IppAttribute(Tag.RangeOfInteger, "page-ranges", pageRange)));
+            if (request.Sides != null)
+                job.Add(new IppAttribute(Tag.Keyword, "sides", Mapper.Map<string>(request.Sides.Value)));
+            if (request.NumberUp != null)
+                job.Add(new IppAttribute(Tag.Integer, "number-up", request.NumberUp.Value));
+            if (request.OrientationRequested != null)
+                job.Add(new IppAttribute(Tag.Enum, "orientation-requested", (int) request.OrientationRequested.Value));
+            if (request.Media != null)
+                job.Add(new IppAttribute(Tag.Keyword, "media", request.Media));
+            if (request.PrinterResolution != null)
+                job.Add(new IppAttribute(Tag.Resolution, "printer-resolution", request.PrinterResolution.Value));
+            if (request.PrintQuality != null)
+                job.Add(new IppAttribute(Tag.Enum, "print-quality", (int) request.PrintQuality.Value));
 
-            writer.WriteBigEndian((short) request.IppVersion);
-            writer.WriteBigEndian((short) IppOperationType.PrintJob);
-            writer.WriteBigEndian(request.RequestId);
-            Write(attributes, writer);
+            r.OperationAttributes.Populate(request.AdditionalOperationAttributes);
+            r.JobAttributes.Populate(request.AdditionalJobAttributes);
+
+            using var writer = new BinaryWriter(stream, Encoding.ASCII, true);
+            Write(r, writer);
             request.Document.CopyTo(writer.BaseStream);
         }
+
         public PrintJobResponse ReadPrintJobResponse(Stream stream)
         {
             var response = ReadStream(stream);
@@ -62,9 +84,14 @@ namespace SharpIpp.Protocol
             var printJobResponse = Mapper.Map<PrintJobResponse>(attributes);
             return printJobResponse;
         }
-        static void ConfigurePrintJobRequest(IMapperConfigurationExpression cfg)
+
+        private static void ConfigurePrintJobRequest(IMapperConfigurationExpression cfg)
         {
+            cfg.CreateMap<PrintJobRequest, IppRequest>()
+               .ForMember(dst => dst.IppOperation, opt => opt.MapFrom(_ => IppOperation.PrintJob));
+
             cfg.CreateMap<IDictionary<string, IppAttribute[]>, PrintJobResponse>()
+               .ForMember(dst => dst.AllAttributes, opt => opt.MapFrom(src => src))
                .ForMember(dst => dst.JobUri, opt => opt.MapFromDic("job-uri"))
                .ForMember(dst => dst.JobId, opt => opt.MapFromDic("job-id"))
                .ForMember(dst => dst.JobState, opt => opt.MapFromDic("job-state"))
@@ -72,9 +99,5 @@ namespace SharpIpp.Protocol
                .ForMember(dst => dst.JobStateMessage, opt => opt.MapFromDic("job-state-message"))
                .ForMember(dst => dst.NumberOfInterveningJobs, opt => opt.MapFromDic("number-of-intervening-jobs"));
         }
-
-
-
-
     }
 }

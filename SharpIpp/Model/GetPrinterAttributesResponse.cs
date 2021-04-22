@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace SharpIpp.Model
 {
@@ -80,7 +81,7 @@ namespace SharpIpp.Model
         /// <summary>
         ///     operations-supported
         /// </summary>
-        public IppOperationType[] OperationsSupported { get; set; } = null!;
+        public IppOperation[] OperationsSupported { get; set; } = null!;
 
         /// <summary>
         ///     multiple-document-jobs-supported
@@ -165,7 +166,7 @@ namespace SharpIpp.Model
         /// <summary>
         ///     compression-supported
         /// </summary>
-        public string[] CompressionSupported { get; set; } = null!;
+        public Compression[] CompressionSupported { get; set; } = null!;
 
         /// <summary>
         ///     job-k-octets-supported
@@ -191,5 +192,7 @@ namespace SharpIpp.Model
         ///     pages-per-minute-color
         /// </summary>
         public int? PagesPerMinuteColor { get; set; }
+
+        public IDictionary<string, IppAttribute[]> AllAttributes { get; set; } = null!;
     }
 }

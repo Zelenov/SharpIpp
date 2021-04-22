@@ -7,7 +7,7 @@ using SharpIpp.Protocol;
 
 namespace SharpIpp
 {
-    public class SharpIppClient : IDisposable
+    public class SharpIppClient : ISharpIppClient
     {
         private readonly bool _disposeHttpClient;
         private readonly HttpClient _httpClient;
@@ -21,7 +21,7 @@ namespace SharpIpp
         {
         }
 
-        private SharpIppClient(HttpClient httpClient, bool disposeHttpClient)
+        internal SharpIppClient(HttpClient httpClient, bool disposeHttpClient)
         {
             _httpClient = httpClient;
             _disposeHttpClient = disposeHttpClient;
@@ -34,28 +34,39 @@ namespace SharpIpp
         }
 
         /// <summary>
-        /// Print-Job Operation
-        /// https://tools.ietf.org/html/rfc2911#section-3.2.1
+        ///     Print-Job Operation
+        ///     https://tools.ietf.org/html/rfc2911#section-3.2.1
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
         public async Task<PrintJobResponse> PrintJobAsync(PrintJobRequest request)
         {
-            return await SendAsync(request.PrinterUri, 
-                stream => _ippProtocol.Write(request, stream),
+            return await SendAsync(request.PrinterUri, stream => _ippProtocol.Write(request, stream),
                 stream => _ippProtocol.ReadPrintJobResponse(stream));
         }
+
         /// <summary>
-        /// Get-Printer-Attributes Operation
-        /// https://tools.ietf.org/html/rfc2911#section-3.2.5
+        ///     Get-Printer-Attributes Operation
+        ///     https://tools.ietf.org/html/rfc2911#section-3.2.5
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
         public async Task<GetPrinterAttributesResponse> GetPrinterAttributesAsync(GetPrinterAttributesRequest request)
         {
-            return await SendAsync(request.PrinterUri, 
-                stream => _ippProtocol.Write(request, stream),
+            return await SendAsync(request.PrinterUri, stream => _ippProtocol.Write(request, stream),
                 stream => _ippProtocol.ReadGetPrinterAttributes(stream));
+        }
+
+        /// <summary>
+        ///     Get-Job-Attributes Operation
+        ///     https://tools.ietf.org/html/rfc2911#section-3.3.4
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        public async Task<GetJobAttributesResponse> GetJobAttributesAsync(GetJobAttributesRequest request)
+        {
+            return await SendAsync(request.PrinterUri, stream => _ippProtocol.Write(request, stream),
+                stream => _ippProtocol.ReadGetJobAttributes(stream));
         }
 
         private async Task<T> SendAsync<T>(Uri printer, Action<Stream> writeAction, Func<Stream, T> readAction)

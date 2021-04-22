@@ -1,9 +1,11 @@
-﻿namespace SharpIpp.Model
+﻿using System;
+
+namespace SharpIpp.Model
 {
-    public struct Range
+    public struct Range : IEquatable<Range>
     {
-        public int Lower { get; set; }
-        public int Upper { get; set; }
+        public int Lower { get; }
+        public int Upper { get; }
 
         public Range(int lower, int upper)
         {
@@ -12,5 +14,17 @@
         }
 
         public override string ToString() => $"{Lower} - {Upper}";
+
+        public bool Equals(Range other) => Lower == other.Lower && Upper == other.Upper;
+
+        public override bool Equals(object obj) => obj is Range other && Equals(other);
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return (Lower * 397) ^ Upper;
+            }
+        }
     }
 }

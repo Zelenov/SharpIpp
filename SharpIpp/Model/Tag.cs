@@ -50,7 +50,7 @@
         ///     no-value
         /// </summary>
         NoValue = 0x13,
-        IntegerUnassigned1 = 0x20,
+        IntegerUnassigned20 = 0x20,
 
         /// <summary>
         ///     integer
@@ -66,18 +66,18 @@
         ///     enum
         /// </summary>
         Enum = 0x23,
-        IntegerUnassigned2 = 0x24,
-        IntegerUnassigned3 = 0x25,
-        IntegerUnassigned4 = 0x26,
-        IntegerUnassigned5 = 0x27,
-        IntegerUnassigned6 = 0x28,
-        IntegerUnassigned7 = 0x29,
-        IntegerUnassigned8 = 0x2A,
-        IntegerUnassigned9 = 0x2B,
-        IntegerUnassigned10 = 0x2C,
-        IntegerUnassigned11 = 0x2D,
-        IntegerUnassigned12 = 0x2E,
-        IntegerUnassigned13 = 0x2F,
+        IntegerUnassigned24 = 0x24,
+        IntegerUnassigned25 = 0x25,
+        IntegerUnassigned26 = 0x26,
+        IntegerUnassigned27 = 0x27,
+        IntegerUnassigned28 = 0x28,
+        IntegerUnassigned29 = 0x29,
+        IntegerUnassigned2A = 0x2A,
+        IntegerUnassigned2B = 0x2B,
+        IntegerUnassigned2C = 0x2C,
+        IntegerUnassigned2D = 0x2D,
+        IntegerUnassigned2E = 0x2E,
+        IntegerUnassigned2F = 0x2F,
 
         /// <summary>
         ///     octetString with an unspecified format
@@ -118,16 +118,16 @@
         ///     endCollection
         /// </summary>
         EndCollection = 0x37,
-        OctetStringUnassigned1 = 0x38,
-        OctetStringUnassigned2 = 0x39,
-        OctetStringUnassigned3 = 0x3a,
-        OctetStringUnassigned4 = 0x3b,
-        OctetStringUnassigned5 = 0x3c,
-        OctetStringUnassigned6 = 0x3d,
-        OctetStringUnassigned7 = 0x3e,
-        OctetStringUnassigned8 = 0x3f,
+        OctetStringUnassigned38 = 0x38,
+        OctetStringUnassigned39 = 0x39,
+        OctetStringUnassigned3A = 0x3a,
+        OctetStringUnassigned3B = 0x3b,
+        OctetStringUnassigned3C = 0x3c,
+        OctetStringUnassigned3D = 0x3d,
+        OctetStringUnassigned3E = 0x3e,
+        OctetStringUnassigned3F = 0x3f,
 
-        StringUnassigned1 = 0x40,
+        StringUnassigned40 = 0x40,
 
         /// <summary>
         ///     textWithoutLanguage
@@ -139,7 +139,7 @@
         /// </summary>
         NameWithoutLanguage = 0x42,
 
-        StringUnassigned2 = 0x43,
+        StringUnassigned43 = 0x43,
 
         /// <summary>
         ///     keyword
@@ -175,26 +175,26 @@
         ///     memberAttrName
         /// </summary>
         MemberAttrName = 0x4a,
-        StringUnassigned3 = 0x4b,
-        StringUnassigned4 = 0x4c,
-        StringUnassigned5 = 0x4d,
-        StringUnassigned6 = 0x4e,
-        StringUnassigned7 = 0x4f,
-        StringUnassigned8 = 0x50,
-        StringUnassigned9 = 0x51,
-        StringUnassigned10 = 0x52,
-        StringUnassigned11 = 0x53,
-        StringUnassigned12 = 0x54,
-        StringUnassigned13 = 0x55,
-        StringUnassigned14 = 0x56,
-        StringUnassigned15 = 0x57,
-        StringUnassigned16 = 0x58,
-        StringUnassigned17 = 0x59,
-        StringUnassigned18 = 0x5a,
-        StringUnassigned19 = 0x5b,
-        StringUnassigned20 = 0x5c,
-        StringUnassigned21 = 0x5d,
-        StringUnassigned22 = 0x5e,
-        StringUnassigned23 = 0x5f
+        StringUnassigned4B = 0x4b,
+        StringUnassigned4C = 0x4c,
+        StringUnassigned4D = 0x4d,
+        StringUnassigned4E = 0x4e,
+        StringUnassigned4F = 0x4f,
+        StringUnassigned50 = 0x50,
+        StringUnassigned51 = 0x51,
+        StringUnassigned52 = 0x52,
+        StringUnassigned53 = 0x53,
+        StringUnassigned54 = 0x54,
+        StringUnassigned55 = 0x55,
+        StringUnassigned56 = 0x56,
+        StringUnassigned57 = 0x57,
+        StringUnassigned58 = 0x58,
+        StringUnassigned59 = 0x59,
+        StringUnassigned5A = 0x5a,
+        StringUnassigned5B = 0x5b,
+        StringUnassigned5C = 0x5c,
+        StringUnassigned5D = 0x5d,
+        StringUnassigned5E = 0x5e,
+        StringUnassigned5F = 0x5f
     }
 }
