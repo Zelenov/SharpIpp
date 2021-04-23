@@ -92,12 +92,14 @@ namespace SharpIpp.Protocol
 
             cfg.CreateMap<IDictionary<string, IppAttribute[]>, PrintJobResponse>()
                .ForMember(dst => dst.AllAttributes, opt => opt.MapFrom(src => src))
-               .ForMember(dst => dst.JobUri, opt => opt.MapFromDic("job-uri"))
-               .ForMember(dst => dst.JobId, opt => opt.MapFromDic("job-id"))
-               .ForMember(dst => dst.JobState, opt => opt.MapFromDic("job-state"))
-               .ForMember(dst => dst.JobStateReasons, opt => opt.MapFromDicSet("job-state-reasons"))
-               .ForMember(dst => dst.JobStateMessage, opt => opt.MapFromDic("job-state-message"))
-               .ForMember(dst => dst.NumberOfInterveningJobs, opt => opt.MapFromDic("number-of-intervening-jobs"));
+               .ForIppMember(dst => dst.JobUri, "job-uri")
+               .ForIppMember(dst => dst.JobId, "job-id")
+               .ForIppMember(dst => dst.JobState, "job-state")
+               .ForIppMemberSet(dst => dst.JobStateReasons, "job-state-reasons")
+               .ForIppMember(dst => dst.JobStateMessage, "job-state-message")
+               .ForIppMember(dst => dst.NumberOfInterveningJobs, "number-of-intervening-jobs");
+
+
         }
     }
 }

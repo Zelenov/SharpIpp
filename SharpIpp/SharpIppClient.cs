@@ -69,6 +69,18 @@ namespace SharpIpp
                 stream => _ippProtocol.ReadGetJobAttributes(stream));
         }
 
+        /// <summary>
+        /// Get-Jobs Operation
+        /// https://tools.ietf.org/html/rfc2911#section-3.2.6
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        public async Task<GetJobsResponse> GetJobsAsync(GetJobsRequest request)
+        {
+            return await SendAsync(request.PrinterUri, stream => _ippProtocol.Write(request, stream),
+                stream => _ippProtocol.ReadGetJobs(stream));
+        }
+
         private async Task<T> SendAsync<T>(Uri printer, Action<Stream> writeAction, Func<Stream, T> readAction)
             where T : class
         {

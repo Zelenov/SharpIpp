@@ -35,6 +35,7 @@ namespace SharpIpp.Protocol
                 ConfigurePrintJobRequest(cfg);
                 ConfigureGetPrinterAttributesResponse(cfg);
                 ConfigureGetJobAttributesResponse(cfg);
+                ConfigureGetJobsResponse(cfg);
             });
 
             Mapper = config.CreateMapper();

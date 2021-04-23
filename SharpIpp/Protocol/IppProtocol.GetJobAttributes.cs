@@ -39,8 +39,7 @@ namespace SharpIpp.Protocol
                     $"JobTarget must have {nameof(GetJobAttributesRequest.JobUrl)} or {nameof(GetJobAttributesRequest.JobId)} set");
             }
 
-            operation.Add(new IppAttribute(Tag.NameWithoutLanguage, "requesting-user-name",
-                request.RequestingUserName));
+            operation.Add(new IppAttribute(Tag.NameWithoutLanguage, "requesting-user-name",request.RequestingUserName));
             r.OperationAttributes.Populate(request.AdditionalOperationAttributes);
             r.JobAttributes.Populate(request.AdditionalJobAttributes);
 
@@ -72,39 +71,39 @@ namespace SharpIpp.Protocol
             //https://tools.ietf.org/html/rfc2911#section-4.4
             cfg.CreateMap<IDictionary<string, IppAttribute[]>, GetJobAttributesResponse>()
                .ForMember(dst => dst.AllAttributes, opt => opt.MapFrom(src => src))
-               .ForMember(dst => dst.JobId, opt => opt.MapFromDic("job-id"))
-               .ForMember(dst => dst.JobPrinterUri, opt => opt.MapFromDic("job-printer-uri"))
-               .ForMember(dst => dst.JobName, opt => opt.MapFromDic("job-name"))
-               .ForMember(dst => dst.JobOriginatingUserName, opt => opt.MapFromDic("job-originating-user-name"))
-               .ForMember(dst => dst.JobSheets, opt => opt.MapFromDic("job-sheets"))
-               .ForMember(dst => dst.Copies, opt => opt.MapFromDic("copies"))
-               .ForMember(dst => dst.MultipleDocumentHandling, opt => opt.MapFromDic("multiple-document-handling"))
-               .ForMember(dst => dst.PrintQuality, opt => opt.MapFromDic("print-quality"))
-               .ForMember(dst => dst.PrinterResolution, opt => opt.MapFromDic("printer-resolution"))
-               .ForMember(dst => dst.Sides, opt => opt.MapFromDic("sides"))
-               .ForMember(dst => dst.Media, opt => opt.MapFromDic("media"))
-               .ForMember(dst => dst.NumberUp, opt => opt.MapFromDic("number-up"))
-               .ForMember(dst => dst.OrientationRequested, opt => opt.MapFromDic("orientation-requested"))
-               .ForMember(dst => dst.Finishings, opt => opt.MapFromDic("finishings"))
-               .ForMember(dst => dst.JobKOctetsProcessed, opt => opt.MapFromDic("job-k-octets-processed"))
-               .ForMember(dst => dst.JobImpressions, opt => opt.MapFromDic("job-impressions"))
-               .ForMember(dst => dst.JobImpressionsCompleted, opt => opt.MapFromDic("job-impressions-completed"))
-               .ForMember(dst => dst.JobMediaSheets, opt => opt.MapFromDic("job-media-sheets"))
-               .ForMember(dst => dst.JobMediaSheetsCompleted, opt => opt.MapFromDic("job-media-sheets-completed"))
-               .ForMember(dst => dst.JobState, opt => opt.MapFromDic("job-state"))
-               .ForMember(dst => dst.Compression, opt => opt.MapFromDic("compression"))
-               .ForMember(dst => dst.DocumentFormat, opt => opt.MapFromDic("document-format"))
-               .ForMember(dst => dst.DocumentName, opt => opt.MapFromDic("document-name"))
-               .ForMember(dst => dst.IppAttributeFidelity, opt => opt.MapFromDic("ipp-attribute-fidelity"))
-               .ForMember(dst => dst.JobStateMessage, opt => opt.MapFromDic("job-state-message"))
-               .ForMember(dst => dst.JobStateReasons, opt => opt.MapFromDic("job-state-reasons"))
-               .ForMember(dst => dst.DateTimeAtCreation, opt => opt.MapFromDic("date-time-at-creation"))
-               .ForMember(dst => dst.DateTimeAtProcessing, opt => opt.MapFromDic("date-time-at-processing"))
-               .ForMember(dst => dst.DateTimeAtCompleted, opt => opt.MapFromDic("date-time-at-completed"))
-               .ForMember(dst => dst.TimeAtCreation, opt => opt.MapFromDic("time-at-creation"))
-               .ForMember(dst => dst.TimeAtProcessing, opt => opt.MapFromDic("time-at-processing"))
-               .ForMember(dst => dst.TimeAtCompleted, opt => opt.MapFromDic("time-at-completed"))
-               .ForMember(dst => dst.JobPrinterUpTime, opt => opt.MapFromDic("job-printer-up-time"));
+               .ForIppMember(dst => dst.JobId, "job-id")
+               .ForIppMember(dst => dst.JobPrinterUri, "job-printer-uri")
+               .ForIppMember(dst => dst.JobName, "job-name")
+               .ForIppMember(dst => dst.JobOriginatingUserName, "job-originating-user-name")
+               .ForIppMember(dst => dst.JobSheets, "job-sheets")
+               .ForIppMember(dst => dst.Copies, "copies")
+               .ForIppMember(dst => dst.MultipleDocumentHandling, "multiple-document-handling")
+               .ForIppMember(dst => dst.PrintQuality, "print-quality")
+               .ForIppMember(dst => dst.PrinterResolution, "printer-resolution")
+               .ForIppMember(dst => dst.Sides, "sides")
+               .ForIppMember(dst => dst.Media, "media")
+               .ForIppMember(dst => dst.NumberUp, "number-up")
+               .ForIppMember(dst => dst.OrientationRequested, "orientation-requested")
+               .ForIppMember(dst => dst.Finishings, "finishings")
+               .ForIppMember(dst => dst.JobKOctetsProcessed, "job-k-octets-processed")
+               .ForIppMember(dst => dst.JobImpressions, "job-impressions")
+               .ForIppMember(dst => dst.JobImpressionsCompleted, "job-impressions-completed")
+               .ForIppMember(dst => dst.JobMediaSheets, "job-media-sheets")
+               .ForIppMember(dst => dst.JobMediaSheetsCompleted, "job-media-sheets-completed")
+               .ForIppMember(dst => dst.JobState, "job-state")
+               .ForIppMember(dst => dst.Compression, "compression")
+               .ForIppMember(dst => dst.DocumentFormat, "document-format")
+               .ForIppMember(dst => dst.DocumentName, "document-name")
+               .ForIppMember(dst => dst.IppAttributeFidelity, "ipp-attribute-fidelity")
+               .ForIppMember(dst => dst.JobStateMessage, "job-state-message")
+               .ForIppMember(dst => dst.JobStateReasons, "job-state-reasons")
+               .ForIppMember(dst => dst.DateTimeAtCreation, "date-time-at-creation")
+               .ForIppMember(dst => dst.DateTimeAtProcessing, "date-time-at-processing")
+               .ForIppMember(dst => dst.DateTimeAtCompleted, "date-time-at-completed")
+               .ForIppMember(dst => dst.TimeAtCreation, "time-at-creation")
+               .ForIppMember(dst => dst.TimeAtProcessing, "time-at-processing")
+               .ForIppMember(dst => dst.TimeAtCompleted, "time-at-completed")
+               .ForIppMember(dst => dst.JobPrinterUpTime, "job-printer-up-time");
         }
     }
 }

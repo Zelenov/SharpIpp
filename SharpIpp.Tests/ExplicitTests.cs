@@ -97,5 +97,15 @@ namespace SharpIpp.Tests
             Console.WriteLine(JsonConvert.SerializeObject(response, Formatting.Indented));
             Assert.AreEqual(request.RequestId, response.RequestId);
         }
+        [Test]
+        public async Task GetJobsAsync()
+        {
+            using var client = GetSharpIppClient;
+            var printer = new Uri(Options.Value.PrinterUrl);
+            var request = new GetJobsRequest {PrinterUri = printer};
+            var response = await client.GetJobsAsync(request);
+            Console.WriteLine(JsonConvert.SerializeObject(response, Formatting.Indented));
+            Assert.AreEqual(request.RequestId, response.RequestId);
+        }
     }
 }

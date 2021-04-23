@@ -245,8 +245,7 @@ namespace SharpIpp.Protocol
                .ToArray();
             if (!attributes.Any())
                 return;
-
-            writer.Write((byte) Tag.OperationAttributesTag);
+            
             IppAttribute? prevAttribute = null;
             Tag? prevTag = null;
             foreach (var (ippTag, ippAttribute) in attributes)
