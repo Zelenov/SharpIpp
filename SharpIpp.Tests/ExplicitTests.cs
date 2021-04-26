@@ -77,7 +77,18 @@ namespace SharpIpp.Tests
         }
 
         [Test]
-        public async Task GetPrinterAttributesAsync()
+        public async Task GetPrinterAttributesAsync_Full()
+        {
+            using var client = GetSharpIppClient;
+            var printer = new Uri(Options.Value.PrinterUrl);
+            var request = new GetPrinterAttributesRequest {PrinterUri = printer, RequestedAttributes = new[]{PrinterAttribute.PrinterState,PrinterAttribute.CharsetConfigured} };
+            var response = await client.GetPrinterAttributesAsync(request);
+            Console.WriteLine(JsonConvert.SerializeObject(response, Formatting.Indented));
+            Assert.AreEqual(request.RequestId, response.RequestId);
+        }
+
+        [Test]
+        public async Task GetPrinterAttributesAsync_Simple()
         {
             using var client = GetSharpIppClient;
             var printer = new Uri(Options.Value.PrinterUrl);

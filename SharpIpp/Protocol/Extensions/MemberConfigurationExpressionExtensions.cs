@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
 using AutoMapper;
 using SharpIpp.Model;
 
@@ -15,6 +16,16 @@ namespace SharpIpp.Protocol.Extensions
             string key) where TMember : IEnumerable
         {
             config.MapFrom(src => !src.ContainsKey(key) ? (object)NoValue.Instance : src[key].Select(x => x.Value));
+        }
+        public static void CreateIppMap<TSource, TDestination>(this IProfileExpression cfg) where TDestination: struct
+        {
+            cfg.CreateMap<NoValue, TDestination?>().ConstructUsing(_ => null);
+            cfg.CreateMap<NoValue, TDestination[]?>().ConstructUsing(_ => null);
+            cfg.CreateMap<object, TDestination?>().ConstructUsing((src, __) => src is TDestination i ? i : (TDestination?)null);
+            if (typeof(TSource) == typeof(object))
+                return;
+            cfg.CreateMap<TSource, TDestination[]>().ConstructUsing((src, ctx) => ctx.Mapper.Map<TDestination[]>(new[] { src }));
+            cfg.CreateMap<TSource, TDestination[]?>().ConstructUsing((src, ctx) => ctx.Mapper.Map<TDestination[]?>(new[] { src }));
         }
 
         public static void MapFromDicSetNull<TDestination, TMember>(

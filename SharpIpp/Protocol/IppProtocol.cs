@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -34,44 +35,32 @@ namespace SharpIpp.Protocol
 
         private void ReadSection(BinaryReader reader, IppResponse res)
         {
-            var delimiter = reader.ReadByte();
-            var sectionDelimiter = delimiter;
-            //https://tools.ietf.org/html/rfc8010#section-3.5.1
-            if (sectionDelimiter > 0x0f)
-                throw new ArgumentException($"Section start tag not found in stream. Expected < 0x0f. Actual: {sectionDelimiter}");
-
             IppAttribute? prevAttribute = null;
+            List<IppAttribute>? attributes = null;
             do
             {
-                delimiter = reader.ReadByte();
-                switch (delimiter)
+                var data = reader.ReadByte();
+                var sectionTag = (SectionTag)data;
+                switch (sectionTag)
                 {
-                    case 0x03: return;
-                    case var n when n <= 0x0f:
-                        sectionDelimiter = delimiter;
+                    //https://tools.ietf.org/html/rfc8010#section-3.5.1
+                    case SectionTag.EndOfAttributesTag: return;
+                    case SectionTag.Reserved:
+                    case SectionTag.OperationAttributesTag:
+                    case SectionTag.JobAttributesTag:
+                    case SectionTag.PrinterAttributesTag:
+                    case SectionTag.UnsupportedAttributesTag:
+                        var section = new IppSection{Tag = sectionTag};
+                        res.Sections.Add(section);
+                        attributes = section.Attributes;
                         break;
                     default:
-                        var attribute = ReadAttribute((Tag) delimiter, reader, prevAttribute);
+                        var attribute = ReadAttribute((Tag) data, reader, prevAttribute);
                         prevAttribute = attribute;
-                        switch (sectionDelimiter)
-                        {
-                            case (byte) Tag.OperationAttributesTag:
-                                res.OperationAttributes.Add(attribute);
-                                break;
-                            case (byte) Tag.JobAttributesTag:
-                                res.JobAttributes.Add(attribute);
-                                break;
-                            case (byte) Tag.PrinterAttributesTag:
-                                res.PrinterAttributes.Add(attribute);
-                                break;
-                            case (byte) Tag.UnsupportedAttributesTag:
-                                res.UnsupportedAttributes.Add(attribute);
-                                break;
-                            default:
-                                res.OtherAttributes.Add(attribute);
-                                break;
-                        }
-
+                        if (attributes==null)
+                            throw new ArgumentException($"Section start tag not found in stream. Expected < 0x06. Actual: {data}");
+                        attributes.Add(attribute);
+                      
                         break;
                 }
             } while (true);
@@ -240,14 +229,14 @@ namespace SharpIpp.Protocol
             writer.WriteBigEndian(request.RequestId);
 
             //operation-attributes-tag https://tools.ietf.org/html/rfc8010#section-3.5.1
-            var attributes = request.OperationAttributes.Select(x => (Tag.OperationAttributesTag, x))
-               .Concat(request.JobAttributes.Select(x => (Tag.JobAttributesTag, x)))
+            var attributes = request.OperationAttributes.Select(x => (SectionTag.OperationAttributesTag, x))
+               .Concat(request.JobAttributes.Select(x => (SectionTag.JobAttributesTag, x)))
                .ToArray();
             if (!attributes.Any())
                 return;
             
             IppAttribute? prevAttribute = null;
-            Tag? prevTag = null;
+            SectionTag? prevTag = null;
             foreach (var (ippTag, ippAttribute) in attributes)
             {
                 if (prevTag == null || ippTag != prevTag)
@@ -260,7 +249,7 @@ namespace SharpIpp.Protocol
             }
 
             //end-of-attributes-tag https://tools.ietf.org/html/rfc8010#section-3.5.1
-            writer.Write((byte) Tag.EndOfAttributesTag);
+            writer.Write((byte)SectionTag.EndOfAttributesTag);
         }
     }
 }

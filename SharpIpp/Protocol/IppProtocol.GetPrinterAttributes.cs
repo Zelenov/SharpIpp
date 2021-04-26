@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using AutoMapper;
 using SharpIpp.Exceptions;
@@ -24,6 +25,9 @@ namespace SharpIpp.Protocol
             operation.Add(new IppAttribute(Tag.Charset, "attributes-charset", "utf-8"));
             operation.Add(new IppAttribute(Tag.NaturalLanguage, "attributes-natural-language", "en"));
             operation.Add(new IppAttribute(Tag.Uri, "printer-uri", request.PrinterUri.ToString()));
+            if (request.RequestedAttributes != null)
+                operation.AddRange(request.RequestedAttributes.Select(requestedAttribute =>
+                    new IppAttribute(Tag.Keyword, "requested-attributes", requestedAttribute)));
 
             r.OperationAttributes.Populate(request.AdditionalOperationAttributes);
             r.JobAttributes.Populate(request.AdditionalJobAttributes);
@@ -52,46 +56,46 @@ namespace SharpIpp.Protocol
 
             //https://tools.ietf.org/html/rfc2911#section-4.4
             cfg.CreateMap<IDictionary<string, IppAttribute[]>, GetPrinterAttributesResponse>()
-              
-                .ForMember(dst => dst.AllAttributes, opt => opt.MapFrom(src => src))
-               .ForIppMemberSet(dst => dst.CharsetSupported, "charset-supported")
-               .ForIppMemberSet(dst => dst.PrinterUriSupported, "printer-uri-supported")
-               .ForIppMemberSet(dst => dst.UriSecuritySupported, "uri-security-supported")
-               .ForIppMemberSet(dst => dst.UriAuthenticationSupported, "uri-authentication-supported")
-               .ForIppMember(dst => dst.PrinterName, "printer-name")
-               .ForIppMember(dst => dst.PrinterLocation, "printer-location")
-               .ForIppMember(dst => dst.PrinterInfo, "printer-info")
-               .ForIppMember(dst => dst.PrinterMoreInfo, "printer-more-info")
-               .ForIppMember(dst => dst.PrinterDriverInstaller, "printer-driver-installer")
-               .ForIppMember(dst => dst.PrinterMakeAndModel, "printer-make-and-model")
-               .ForIppMember(dst => dst.PrinterMoreInfoManufacturer, "printer-more-info-manufacturer")
-               .ForIppMember(dst => dst.PrinterState, "printer-state")
-               .ForIppMemberSet(dst => dst.PrinterStateReasons, "printer-state-reasons")
-               .ForIppMember(dst => dst.PrinterStateMessage, "printer-state-message")
-               .ForIppMemberSet(dst => dst.IppVersionsSupported, "ipp-versions-supported")
-               .ForIppMemberSet(dst => dst.OperationsSupported, "operations-supported")
-               .ForIppMember(dst => dst.MultipleDocumentJobsSupported, "multiple-document-jobs-supported")
-               .ForIppMember(dst => dst.CharsetConfigured, "charset-configured")
-               .ForIppMemberSet(dst => dst.CharsetSupported, "charset-supported")
-               .ForIppMember(dst => dst.NaturalLanguageConfigured, "natural-language-configured/")
-               .ForIppMemberSet(dst => dst.GeneratedNaturalLanguageSupported, "generated-natural-language-supported")
-               .ForIppMember(dst => dst.DocumentFormatDefault, "document-format-default")
-               .ForIppMemberSet(dst => dst.DocumentFormatSupported, "document-format-supported")
-               .ForIppMember(dst => dst.PrinterIsAcceptingJobs, "printer-is-accepting-jobs")
-               .ForIppMember(dst => dst.QueuedJobCount, "queued-job-count")
-               .ForIppMember(dst => dst.PrinterMessageFromOperator, "printer-message-from-operator")
-               .ForIppMember(dst => dst.ColorSupported, "color-supported")
-               .ForIppMemberSetNull(dst => dst.ReferenceUriSchemesSupported, "reference-uri-schemes-supported")
-               .ForIppMember(dst => dst.PdlOverrideSupported, "pdl-override-supported")
-               .ForIppMember(dst => dst.PrinterUpTime, "printer-up-time")
-               .ForIppMember(dst => dst.PrinterCurrentTime, "printer-current-time")
-               .ForIppMember(dst => dst.MultipleOperationTimeOut, "multiple-operation-time-out/")
-               .ForIppMemberSet(dst => dst.CompressionSupported, "compression-supported")
-               .ForIppMember(dst => dst.JobKOctetsSupported, "job-k-octets-supported")
-               .ForIppMember(dst => dst.JobImpressionsSupported, "job-impressions-supported")
-               .ForIppMember(dst => dst.JobMediaSheetsSupported, "job-media-sheets-supported")
-               .ForIppMember(dst => dst.PagesPerMinute, "pages-per-minute")
-               .ForIppMember(dst => dst.PagesPerMinuteColor, "pages-per-minute-color");
+               .ForMember(dst => dst.AllAttributes, opt => opt.MapFrom(src => src))
+               .ForIppMemberSetNull(dst => dst.CharsetSupported, PrinterAttribute.CharsetSupported)
+               .ForIppMemberSetNull(dst => dst.PrinterUriSupported, PrinterAttribute.PrinterUriSupported)
+               .ForIppMemberSetNull(dst => dst.UriSecuritySupported, PrinterAttribute.UriSecuritySupported)
+               .ForIppMemberSetNull(dst => dst.UriAuthenticationSupported, PrinterAttribute.UriAuthenticationSupported)
+               .ForIppMember(dst => dst.PrinterName, PrinterAttribute.PrinterName)
+               .ForIppMember(dst => dst.PrinterLocation, PrinterAttribute.PrinterLocation)
+               .ForIppMember(dst => dst.PrinterInfo, PrinterAttribute.PrinterInfo)
+               .ForIppMember(dst => dst.PrinterMoreInfo, PrinterAttribute.PrinterMoreInfo)
+               .ForIppMember(dst => dst.PrinterDriverInstaller, PrinterAttribute.PrinterDriverInstaller)
+               .ForIppMember(dst => dst.PrinterMakeAndModel, PrinterAttribute.PrinterMakeAndModel)
+               .ForIppMember(dst => dst.PrinterMoreInfoManufacturer, PrinterAttribute.PrinterMoreInfoManufacturer)
+               .ForIppMember(dst => dst.PrinterState, PrinterAttribute.PrinterState)
+               .ForIppMemberSetNull(dst => dst.PrinterStateReasons, PrinterAttribute.PrinterStateReasons)
+               .ForIppMember(dst => dst.PrinterStateMessage, PrinterAttribute.PrinterStateMessage)
+               .ForIppMemberSetNull(dst => dst.IppVersionsSupported, PrinterAttribute.IppVersionsSupported)
+               .ForIppMemberSetNull(dst => dst.OperationsSupported, PrinterAttribute.OperationsSupported)
+               .ForIppMember(dst => dst.MultipleDocumentJobsSupported, PrinterAttribute.MultipleDocumentJobsSupported)
+               .ForIppMember(dst => dst.CharsetConfigured, PrinterAttribute.CharsetConfigured)
+               .ForIppMember(dst => dst.NaturalLanguageConfigured, PrinterAttribute.NaturalLanguageConfigured)
+               .ForIppMemberSetNull(dst => dst.GeneratedNaturalLanguageSupported,
+                    PrinterAttribute.GeneratedNaturalLanguageSupported)
+               .ForIppMember(dst => dst.DocumentFormatDefault, PrinterAttribute.DocumentFormatDefault)
+               .ForIppMemberSetNull(dst => dst.DocumentFormatSupported, PrinterAttribute.DocumentFormatSupported)
+               .ForIppMember(dst => dst.PrinterIsAcceptingJobs, PrinterAttribute.PrinterIsAcceptingJobs)
+               .ForIppMember(dst => dst.QueuedJobCount, PrinterAttribute.QueuedJobCount)
+               .ForIppMember(dst => dst.PrinterMessageFromOperator, PrinterAttribute.PrinterMessageFromOperator)
+               .ForIppMember(dst => dst.ColorSupported, PrinterAttribute.ColorSupported)
+               .ForIppMemberSetNull(dst => dst.ReferenceUriSchemesSupported,
+                    PrinterAttribute.ReferenceUriSchemesSupported)
+               .ForIppMember(dst => dst.PdlOverrideSupported, PrinterAttribute.PdlOverrideSupported)
+               .ForIppMember(dst => dst.PrinterUpTime, PrinterAttribute.PrinterUpTime)
+               .ForIppMember(dst => dst.PrinterCurrentTime, PrinterAttribute.PrinterCurrentTime)
+               .ForIppMember(dst => dst.MultipleOperationTimeOut, PrinterAttribute.MultipleOperationTimeOut)
+               .ForIppMemberSetNull(dst => dst.CompressionSupported, PrinterAttribute.CompressionSupported)
+               .ForIppMember(dst => dst.JobKOctetsSupported, PrinterAttribute.JobKOctetsSupported)
+               .ForIppMember(dst => dst.JobImpressionsSupported, PrinterAttribute.JobImpressionsSupported)
+               .ForIppMember(dst => dst.JobMediaSheetsSupported, PrinterAttribute.JobMediaSheetsSupported)
+               .ForIppMember(dst => dst.PagesPerMinute, PrinterAttribute.PagesPerMinute)
+               .ForIppMember(dst => dst.PagesPerMinuteColor, PrinterAttribute.PagesPerMinuteColor);
         }
     }
 }

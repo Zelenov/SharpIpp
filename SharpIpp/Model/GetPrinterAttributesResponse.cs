@@ -11,22 +11,22 @@ namespace SharpIpp.Model
         /// <summary>
         ///     printer-uri-supported
         /// </summary>
-        public string[] PrinterUriSupported { get; set; } = null!;
+        public string[]? PrinterUriSupported { get; set; }
 
         /// <summary>
         ///     uri-security-supported
         /// </summary>
-        public string[] UriSecuritySupported { get; set; } = null!;
+        public string[]? UriSecuritySupported { get; set; }
 
         /// <summary>
         ///     uri-authentication-supported
         /// </summary>
-        public string[] UriAuthenticationSupported { get; set; } = null!;
+        public string[]? UriAuthenticationSupported { get; set; }
 
         /// <summary>
         ///     printer-name
         /// </summary>
-        public string PrinterName { get; set; } = null!;
+        public string? PrinterName { get; set; }
 
         /// <summary>
         ///     printer-location
@@ -66,7 +66,7 @@ namespace SharpIpp.Model
         /// <summary>
         ///     printer-state-reasons
         /// </summary>
-        public string[] PrinterStateReasons { get; set; } = null!;
+        public string[]? PrinterStateReasons { get; set; }
 
         /// <summary>
         ///     printer-state-message
@@ -76,12 +76,12 @@ namespace SharpIpp.Model
         /// <summary>
         ///     ipp-versions-supported
         /// </summary>
-        public string[] IppVersionsSupported { get; set; } = null!;
+        public string[]? IppVersionsSupported { get; set; }
 
         /// <summary>
         ///     operations-supported
         /// </summary>
-        public IppOperation[] OperationsSupported { get; set; } = null!;
+        public IppOperation[]? OperationsSupported { get; set; }
 
         /// <summary>
         ///     multiple-document-jobs-supported
@@ -91,42 +91,42 @@ namespace SharpIpp.Model
         /// <summary>
         ///     charset-configured
         /// </summary>
-        public string CharsetConfigured { get; set; } = null!;
+        public string? CharsetConfigured { get; set; }
 
         /// <summary>
         ///     charset-supported
         /// </summary>
-        public string[] CharsetSupported { get; set; } = null!;
+        public string[]? CharsetSupported { get; set; }
 
         /// <summary>
         ///     natural-language-configured
         /// </summary>
-        public string NaturalLanguageConfigured { get; set; } = null!;
+        public string? NaturalLanguageConfigured { get; set; }
 
         /// <summary>
         ///     generated-natural-language-supported
         /// </summary>
-        public string[] GeneratedNaturalLanguageSupported { get; set; } = null!;
+        public string[]? GeneratedNaturalLanguageSupported { get; set; }
 
         /// <summary>
         ///     document-format-default
         /// </summary>
-        public string DocumentFormatDefault { get; set; } = null!;
+        public string? DocumentFormatDefault { get; set; }
 
         /// <summary>
         ///     document-format-supported
         /// </summary>
-        public string[] DocumentFormatSupported { get; set; } = null!;
+        public string[]? DocumentFormatSupported { get; set; }
 
         /// <summary>
         ///     printer-is-accepting-jobs
         /// </summary>
-        public bool PrinterIsAcceptingJobs { get; set; }
+        public bool? PrinterIsAcceptingJobs { get; set; }
 
         /// <summary>
         ///     queued-job-count
         /// </summary>
-        public int QueuedJobCount { get; set; }
+        public int? QueuedJobCount { get; set; }
 
         /// <summary>
         ///     printer-message-from-operator
@@ -146,12 +146,12 @@ namespace SharpIpp.Model
         /// <summary>
         ///     pdl-override-supported
         /// </summary>
-        public string PdlOverrideSupported { get; set; } = null!;
+        public string? PdlOverrideSupported { get; set; }
 
         /// <summary>
         ///     printer-up-time
         /// </summary>
-        public int PrinterUpTime { get; set; }
+        public int? PrinterUpTime { get; set; }
 
         /// <summary>
         ///     printer-current-time
@@ -166,7 +166,7 @@ namespace SharpIpp.Model
         /// <summary>
         ///     compression-supported
         /// </summary>
-        public Compression[] CompressionSupported { get; set; } = null!;
+        public Compression[]? CompressionSupported { get; set; }
 
         /// <summary>
         ///     job-k-octets-supported

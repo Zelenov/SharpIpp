@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using AutoMapper;
 using SharpIpp.Model;
+using SharpIpp.Protocol.Extensions;
 
 namespace SharpIpp.Protocol
 {
@@ -16,17 +17,45 @@ namespace SharpIpp.Protocol
                 cfg.AllowNullCollections = true;
                 cfg.AllowNullDestinationValues = true;
 
-                cfg.CreateMap<int, IppOperation>().ConstructUsing(src => (IppOperation) src);
-                cfg.CreateMap<object, int?>().ConstructUsing((src, __) =>src is int i ? i : (int?) null);
+                  cfg.CreateMap<int, IppOperation>().ConstructUsing(src => (IppOperation) src);
+                  cfg.CreateIppMap<object, int>();
+                  cfg.CreateIppMap<object, bool>();
+                  cfg.CreateIppMap<object, DateTimeOffset>();
+                  cfg.CreateIppMap<object, Range>();
+                  cfg.CreateIppMap<object, Resolution>();
+                  cfg.CreateIppMap<object, StringWithLanguage>();
+                  cfg.CreateIppMap<string, Compression>();
+                  cfg.CreateIppMap<int, IppOperation>();
+
+
+                  cfg.CreateMap<object, string?>().ConstructUsing((src, __) => src is string i ? i : null);
+                  cfg.CreateMap<NoValue, string[]?>().ConstructUsing(_ => null);
+                  cfg.CreateMap<string, string[]>().ConstructUsing(src => new[] { src });
+
+              /*  cfg.CreateMap<object, int?>().ConstructUsing((src, __) => src is int i ? i : (int?)null);
                 cfg.CreateMap<object, string?>().ConstructUsing((src, __) => src is string i ? i : null);
                 cfg.CreateMap<NoValue, string[]?>().ConstructUsing(_ => null);
-                cfg.CreateMap<object, bool?>().ConstructUsing((src, __) => src is bool i ? i : (bool?) null);
+                cfg.CreateMap<NoValue, Compression[]?>().ConstructUsing(_ => null);
+                cfg.CreateMap<object, bool?>().ConstructUsing((src, __) => src is bool i ? i : (bool?)null);
                 cfg.CreateMap<object, DateTimeOffset?>().ConstructUsing((src, __) => src is DateTimeOffset i ? i : (DateTimeOffset?)null);
                 cfg.CreateMap<object, Range?>().ConstructUsing((src, __) => src is Range i ? i : (Range?)null);
                 cfg.CreateMap<object, Resolution?>().ConstructUsing((src, __) => src is Resolution i ? i : (Resolution?)null);
                 cfg.CreateMap<object, StringWithLanguage?>().ConstructUsing((src, __) => src is StringWithLanguage i ? i : (StringWithLanguage?)null);
 
-                cfg.CreateMap<string, string[]>().ConstructUsing(src => new[] {src});
+                cfg.CreateMap<string, string[]>().ConstructUsing(src => new[] { src });
+                cfg.CreateMap<string, Compression[]?>().ConstructUsing((src, ctx) =>
+                    ctx.Mapper.Map<Compression[]?>(new[] { src }));
+                cfg.CreateMap<string, Compression[]>().ConstructUsing((src, ctx) =>
+                    ctx.Mapper.Map<Compression[]>(new[] { src }));
+              */
+
+
+
+
+                cfg.CreateMap<object, string?>().ConstructUsing((src, __) => src is string i ? i : null);
+                cfg.CreateMap<NoValue, string[]?>().ConstructUsing(_ => null);
+                cfg.CreateMap<string, string[]>().ConstructUsing(src => new[] { src });
+
                 ConfigureJobHoldUntil(cfg);
                 ConfigureMultipleDocumentHandling(cfg);
                 ConfigureSides(cfg);
