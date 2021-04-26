@@ -17,11 +17,14 @@ namespace SharpIpp.Protocol.Extensions
         {
             config.MapFrom(src => !src.ContainsKey(key) ? (object)NoValue.Instance : src[key].Select(x => x.Value));
         }
-        public static void CreateIppMap<TSource, TDestination>(this IProfileExpression cfg) where TDestination: struct
+        public static void CreateIppMap<TSource, TDestination>(this IProfileExpression cfg, bool simpleType = false) where TDestination: struct
         {
             cfg.CreateMap<NoValue, TDestination?>().ConstructUsing(_ => null);
             cfg.CreateMap<NoValue, TDestination[]?>().ConstructUsing(_ => null);
-            cfg.CreateMap<object, TDestination?>().ConstructUsing((src, __) => src is TDestination i ? i : (TDestination?)null);
+            if (simpleType)
+                cfg.CreateMap<object, TDestination?>().ConstructUsing((src, __) => src is TDestination i ? i : (TDestination?)null);
+            else
+                cfg.CreateMap<object, TDestination?>().ConstructUsing((src, ctx) => ctx.Mapper.Map<TDestination>(src));
             if (typeof(TSource) != typeof(object))
             {
                 cfg.CreateMap<TSource, TDestination[]>()

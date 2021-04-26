@@ -19,12 +19,12 @@ namespace SharpIpp.Protocol
 
 
                 cfg.CreateMap<int, IppOperation>().ConstructUsing(src => (IppOperation)src);
-                cfg.CreateIppMap<object, int>();
-                cfg.CreateIppMap<object, bool>();
-                cfg.CreateIppMap<object, DateTimeOffset>();
-                cfg.CreateIppMap<object, Range>();
-                cfg.CreateIppMap<object, Resolution>();
-                cfg.CreateIppMap<object, StringWithLanguage>();
+                cfg.CreateIppMap<object, int>(true);
+                cfg.CreateIppMap<object, bool>(true);
+                cfg.CreateIppMap<object, DateTimeOffset>(true);
+                cfg.CreateIppMap<object, Range>(true);
+                cfg.CreateIppMap<object, Resolution>(true);
+                cfg.CreateIppMap<object, StringWithLanguage>(true);
 
                 cfg.CreateIppMap<int, IppOperation>();
                 cfg.CreateIppMap<int, Finishings>();
@@ -33,7 +33,6 @@ namespace SharpIpp.Protocol
                 cfg.CreateIppMap<int, Orientation>();
                 cfg.CreateIppMap<int, PrinterState>();
                 cfg.CreateIppMap<int, PrintQuality>();
-                cfg.CreateIppMap<int, PrintScaling>();
                 cfg.CreateIppMap<int, ResolutionUnit>();
 
                 cfg.CreateIppMap<string, JobHoldUntil>();
@@ -41,6 +40,7 @@ namespace SharpIpp.Protocol
                 cfg.CreateIppMap<string, MultipleDocumentHandling>();
                 cfg.CreateIppMap<string, Sides>();
                 cfg.CreateIppMap<string, Compression>();
+                cfg.CreateIppMap<string, PrintScaling>();
 
 
                 cfg.CreateMap<object, string?>().ConstructUsing((src, __) => src is string i ? i : null);
@@ -181,7 +181,8 @@ namespace SharpIpp.Protocol
         private static void ConfigurePrintScaling(IMapperConfigurationExpression cfg)
         {
             cfg.CreateMap<object, PrintScaling>()
-               .ConstructUsing((src, ctx) => src switch
+               .ConstructUsing((src, ctx) =>
+                    src switch
                 {
                     "auto" => PrintScaling.Auto,
                     "auto-fit" => PrintScaling.AutoFit,
