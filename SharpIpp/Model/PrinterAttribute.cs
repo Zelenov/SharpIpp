@@ -39,5 +39,7 @@
         public const string JobMediaSheetsSupported = "job-media-sheets-supported";
         public const string PagesPerMinute = "pages-per-minute";
         public const string PagesPerMinuteColor = "pages-per-minute-color";
+        public const string PrintScalingSupported = "print-scaling-supported";
+        public const string PrintScalingDefault = "print-scaling-default";
     }
 }

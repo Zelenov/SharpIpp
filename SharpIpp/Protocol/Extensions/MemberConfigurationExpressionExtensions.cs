@@ -22,10 +22,13 @@ namespace SharpIpp.Protocol.Extensions
             cfg.CreateMap<NoValue, TDestination?>().ConstructUsing(_ => null);
             cfg.CreateMap<NoValue, TDestination[]?>().ConstructUsing(_ => null);
             cfg.CreateMap<object, TDestination?>().ConstructUsing((src, __) => src is TDestination i ? i : (TDestination?)null);
-            if (typeof(TSource) == typeof(object))
-                return;
-            cfg.CreateMap<TSource, TDestination[]>().ConstructUsing((src, ctx) => ctx.Mapper.Map<TDestination[]>(new[] { src }));
-            cfg.CreateMap<TSource, TDestination[]?>().ConstructUsing((src, ctx) => ctx.Mapper.Map<TDestination[]?>(new[] { src }));
+            if (typeof(TSource) != typeof(object))
+            {
+                cfg.CreateMap<TSource, TDestination[]>()
+                   .ConstructUsing((src, ctx) => ctx.Mapper.Map<TDestination[]>(new[] {src}));
+                cfg.CreateMap<TSource, TDestination[]?>()
+                   .ConstructUsing((src, ctx) => ctx.Mapper.Map<TDestination[]?>(new[] {src}));
+            }
         }
 
         public static void MapFromDicSetNull<TDestination, TMember>(

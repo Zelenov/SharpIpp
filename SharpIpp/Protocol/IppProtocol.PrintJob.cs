@@ -64,6 +64,8 @@ namespace SharpIpp.Protocol
                 job.Add(new IppAttribute(Tag.Resolution, "printer-resolution", request.PrinterResolution.Value));
             if (request.PrintQuality != null)
                 job.Add(new IppAttribute(Tag.Enum, "print-quality", (int) request.PrintQuality.Value));
+            if (request.PrintScaling != null)
+                job.Add(new IppAttribute(Tag.Keyword, "print-scaling", Mapper.Map<string>(request.PrintScaling.Value)));
 
             r.OperationAttributes.Populate(request.AdditionalOperationAttributes);
             r.JobAttributes.Populate(request.AdditionalJobAttributes);

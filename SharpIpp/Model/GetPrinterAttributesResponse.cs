@@ -61,7 +61,7 @@ namespace SharpIpp.Model
         /// <summary>
         ///     printer-state
         /// </summary>
-        public PrinterState PrinterState { get; set; }
+        public PrinterState? PrinterState { get; set; }
 
         /// <summary>
         ///     printer-state-reasons
@@ -192,6 +192,8 @@ namespace SharpIpp.Model
         ///     pages-per-minute-color
         /// </summary>
         public int? PagesPerMinuteColor { get; set; }
+        public PrintScaling? PrintScalingDefault { get; set; }
+        public PrintScaling[]? PrintScalingSupported { get; set; }
 
         public IDictionary<string, IppAttribute[]> AllAttributes { get; set; } = null!;
     }

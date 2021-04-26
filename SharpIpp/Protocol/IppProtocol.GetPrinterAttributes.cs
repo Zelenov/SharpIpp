@@ -95,7 +95,9 @@ namespace SharpIpp.Protocol
                .ForIppMember(dst => dst.JobImpressionsSupported, PrinterAttribute.JobImpressionsSupported)
                .ForIppMember(dst => dst.JobMediaSheetsSupported, PrinterAttribute.JobMediaSheetsSupported)
                .ForIppMember(dst => dst.PagesPerMinute, PrinterAttribute.PagesPerMinute)
-               .ForIppMember(dst => dst.PagesPerMinuteColor, PrinterAttribute.PagesPerMinuteColor);
+               .ForIppMemberSetNull(dst => dst.PrintScalingSupported, PrinterAttribute.PrintScalingSupported)
+               .ForIppMember(dst => dst.PrintScalingDefault, PrinterAttribute.PrintScalingDefault)
+                ;
         }
     }
 }

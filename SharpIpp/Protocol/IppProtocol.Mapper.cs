@@ -17,50 +17,42 @@ namespace SharpIpp.Protocol
                 cfg.AllowNullCollections = true;
                 cfg.AllowNullDestinationValues = true;
 
-                  cfg.CreateMap<int, IppOperation>().ConstructUsing(src => (IppOperation) src);
-                  cfg.CreateIppMap<object, int>();
-                  cfg.CreateIppMap<object, bool>();
-                  cfg.CreateIppMap<object, DateTimeOffset>();
-                  cfg.CreateIppMap<object, Range>();
-                  cfg.CreateIppMap<object, Resolution>();
-                  cfg.CreateIppMap<object, StringWithLanguage>();
-                  cfg.CreateIppMap<string, Compression>();
-                  cfg.CreateIppMap<int, IppOperation>();
 
+                cfg.CreateMap<int, IppOperation>().ConstructUsing(src => (IppOperation)src);
+                cfg.CreateIppMap<object, int>();
+                cfg.CreateIppMap<object, bool>();
+                cfg.CreateIppMap<object, DateTimeOffset>();
+                cfg.CreateIppMap<object, Range>();
+                cfg.CreateIppMap<object, Resolution>();
+                cfg.CreateIppMap<object, StringWithLanguage>();
 
-                  cfg.CreateMap<object, string?>().ConstructUsing((src, __) => src is string i ? i : null);
-                  cfg.CreateMap<NoValue, string[]?>().ConstructUsing(_ => null);
-                  cfg.CreateMap<string, string[]>().ConstructUsing(src => new[] { src });
+                cfg.CreateIppMap<int, IppOperation>();
+                cfg.CreateIppMap<int, Finishings>();
+                cfg.CreateIppMap<int, IppStatusCode>();
+                cfg.CreateIppMap<int, JobState>();
+                cfg.CreateIppMap<int, Orientation>();
+                cfg.CreateIppMap<int, PrinterState>();
+                cfg.CreateIppMap<int, PrintQuality>();
+                cfg.CreateIppMap<int, PrintScaling>();
+                cfg.CreateIppMap<int, ResolutionUnit>();
 
-              /*  cfg.CreateMap<object, int?>().ConstructUsing((src, __) => src is int i ? i : (int?)null);
-                cfg.CreateMap<object, string?>().ConstructUsing((src, __) => src is string i ? i : null);
-                cfg.CreateMap<NoValue, string[]?>().ConstructUsing(_ => null);
-                cfg.CreateMap<NoValue, Compression[]?>().ConstructUsing(_ => null);
-                cfg.CreateMap<object, bool?>().ConstructUsing((src, __) => src is bool i ? i : (bool?)null);
-                cfg.CreateMap<object, DateTimeOffset?>().ConstructUsing((src, __) => src is DateTimeOffset i ? i : (DateTimeOffset?)null);
-                cfg.CreateMap<object, Range?>().ConstructUsing((src, __) => src is Range i ? i : (Range?)null);
-                cfg.CreateMap<object, Resolution?>().ConstructUsing((src, __) => src is Resolution i ? i : (Resolution?)null);
-                cfg.CreateMap<object, StringWithLanguage?>().ConstructUsing((src, __) => src is StringWithLanguage i ? i : (StringWithLanguage?)null);
-
-                cfg.CreateMap<string, string[]>().ConstructUsing(src => new[] { src });
-                cfg.CreateMap<string, Compression[]?>().ConstructUsing((src, ctx) =>
-                    ctx.Mapper.Map<Compression[]?>(new[] { src }));
-                cfg.CreateMap<string, Compression[]>().ConstructUsing((src, ctx) =>
-                    ctx.Mapper.Map<Compression[]>(new[] { src }));
-              */
-
-
+                cfg.CreateIppMap<string, JobHoldUntil>();
+                cfg.CreateIppMap<string, JobSheets>();
+                cfg.CreateIppMap<string, MultipleDocumentHandling>();
+                cfg.CreateIppMap<string, Sides>();
+                cfg.CreateIppMap<string, Compression>();
 
 
                 cfg.CreateMap<object, string?>().ConstructUsing((src, __) => src is string i ? i : null);
                 cfg.CreateMap<NoValue, string[]?>().ConstructUsing(_ => null);
-                cfg.CreateMap<string, string[]>().ConstructUsing(src => new[] { src });
+                cfg.CreateMap<string, string[]>().ConstructUsing(src => new[] {src});
 
                 ConfigureJobHoldUntil(cfg);
                 ConfigureMultipleDocumentHandling(cfg);
                 ConfigureSides(cfg);
                 ConfigureJobSheets(cfg);
                 ConfigureCompression(cfg);
+                ConfigurePrintScaling(cfg);
                 ConfigurePrintJobRequest(cfg);
                 ConfigureGetPrinterAttributesResponse(cfg);
                 ConfigureGetJobAttributesResponse(cfg);
@@ -183,6 +175,30 @@ namespace SharpIpp.Protocol
                     Compression.None => "none",
                     Compression.Deflate => "deflate",
                     Compression.Gzip => "gzip",
+                    _ => "unsupported"
+                });
+        }
+        private static void ConfigurePrintScaling(IMapperConfigurationExpression cfg)
+        {
+            cfg.CreateMap<object, PrintScaling>()
+               .ConstructUsing((src, ctx) => src switch
+                {
+                    "auto" => PrintScaling.Auto,
+                    "auto-fit" => PrintScaling.AutoFit,
+                    "fill" => PrintScaling.Fill,
+                    "fit" => PrintScaling.Fit,
+                    "none" => PrintScaling.None,
+                    _ => PrintScaling.Unsupported
+                });
+
+            cfg.CreateMap<PrintScaling, string>()
+               .ConstructUsing((src, ctx) => src switch
+                {
+                    PrintScaling.Auto => "auto",
+                    PrintScaling.AutoFit => "auto-fit",
+                    PrintScaling.Fill => "fill",
+                    PrintScaling.Fit => "fit",
+                    PrintScaling.None => "None",
                     _ => "unsupported"
                 });
         }

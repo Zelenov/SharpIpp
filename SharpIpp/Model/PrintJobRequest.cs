@@ -248,6 +248,7 @@ namespace SharpIpp.Model
         ///     the Job.
         /// </summary>
         public PrintQuality? PrintQuality { get; set; }
+        public PrintScaling? PrintScaling { get; set; }
 
         public IEnumerable<IppAttribute>? AdditionalOperationAttributes { get; set; }
         public IEnumerable<IppAttribute>? AdditionalJobAttributes { get; set; }
