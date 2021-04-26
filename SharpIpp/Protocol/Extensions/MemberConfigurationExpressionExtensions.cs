@@ -19,8 +19,8 @@ namespace SharpIpp.Protocol.Extensions
         }
         public static void CreateIppMap<TSource, TDestination>(this IProfileExpression cfg, bool simpleType = false) where TDestination: struct
         {
-            cfg.CreateMap<NoValue, TDestination?>().ConvertUsing(_ => null);
-            cfg.CreateMap<NoValue, TDestination[]?>().ConvertUsing(_ => null);
+            cfg.CreateMap<NoValue, TDestination?>().ConvertUsing((_, __) => null);
+            cfg.CreateMap<NoValue, TDestination[]?>().ConvertUsing((_, __) => null);
             if (simpleType)
                 cfg.CreateMap<object, TDestination?>().ConvertUsing((src, __) => src is TDestination i ? i : (TDestination?)null);
             else

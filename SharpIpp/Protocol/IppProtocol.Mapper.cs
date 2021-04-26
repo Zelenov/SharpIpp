@@ -18,7 +18,7 @@ namespace SharpIpp.Protocol
                 cfg.AllowNullDestinationValues = true;
 
 
-                cfg.CreateMap<int, IppOperation>().ConvertUsing(src =>(IppOperation)src);
+                cfg.CreateMap<int, IppOperation>().ConvertUsing((src, _) =>(IppOperation)src);
                 cfg.CreateIppMap<object, int>(true);
                 cfg.CreateIppMap<object, bool>(true);
                 cfg.CreateIppMap<object, DateTimeOffset>(true);
@@ -44,8 +44,8 @@ namespace SharpIpp.Protocol
 
 
                 cfg.CreateMap<object, string?>().ConvertUsing((src, __) => src is string i ? i : null);
-                cfg.CreateMap<NoValue, string[]?>().ConvertUsing(_ => null);
-                cfg.CreateMap<string, string[]>().ConvertUsing(src => new[] {src});
+                cfg.CreateMap<NoValue, string[]?>().ConvertUsing((_, __) => null);
+                cfg.CreateMap<string, string[]>().ConvertUsing((src, _) => new[] {src});
 
                 ConfigureJobHoldUntil(cfg);
                 ConfigureMultipleDocumentHandling(cfg);
