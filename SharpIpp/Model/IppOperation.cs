@@ -3,7 +3,7 @@
     /// <summary>
     ///     https://tools.ietf.org/html/rfc2911#section-4.4.15
     /// </summary>
-    public enum IppOperation
+    public enum IppOperation: short
     {
         Reserved1 = 0x0000,
         Reserved2 = 0x0001,

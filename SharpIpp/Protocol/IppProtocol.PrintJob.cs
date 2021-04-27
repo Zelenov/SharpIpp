@@ -2,7 +2,6 @@
 using System.IO;
 using System.Linq;
 using System.Text;
-using AutoMapper;
 using SharpIpp.Exceptions;
 using SharpIpp.Model;
 using SharpIpp.Protocol.Extensions;
@@ -84,23 +83,28 @@ namespace SharpIpp.Protocol
 
             var attributes = response.Attributes;
             var printJobResponse = Mapper.Map<PrintJobResponse>(attributes);
+            printJobResponse.IppVersion = response.Version;
+            printJobResponse.RequestId = response.RequestId;
             return printJobResponse;
         }
 
-        private static void ConfigurePrintJobRequest(IMapperConfigurationExpression cfg)
+        private static void ConfigurePrintJobRequest(SimpleMapper mapper)
         {
-            cfg.CreateMap<PrintJobRequest, IppRequest>()
-               .ForMember(dst => dst.IppOperation, opt => opt.MapFrom(_ => IppOperation.PrintJob));
+            mapper.CreateMap<PrintJobRequest, IppRequest>((src, map) => new IppRequest
+            {
+               IppOperation = IppOperation.PrintJob, IppVersion = src.IppVersion, RequestId = src.RequestId
+            });
 
-            cfg.CreateMap<IDictionary<string, IppAttribute[]>, PrintJobResponse>()
-               .ForMember(dst => dst.AllAttributes, opt => opt.MapFrom(src => src))
-               .ForIppMember(dst => dst.JobUri, "job-uri")
-               .ForIppMember(dst => dst.JobId, "job-id")
-               .ForIppMember(dst => dst.JobState, "job-state")
-               .ForIppMemberSet(dst => dst.JobStateReasons, "job-state-reasons")
-               .ForIppMember(dst => dst.JobStateMessage, "job-state-message")
-               .ForIppMember(dst => dst.NumberOfInterveningJobs, "number-of-intervening-jobs");
-
+            mapper.CreateMap<IDictionary<string, IppAttribute[]>, PrintJobResponse>((src, map) => new PrintJobResponse
+            {
+                AllAttributes = src,
+                JobUri = map.MapFromDic<string>(src, "job-uri"),
+                JobId = map.MapFromDic<int>(src, "job-id"),
+                JobState = map.MapFromDic<JobState>(src, "job-state"),
+                JobStateReasons = map.MapFromDicSet<string[]>(src, "job-state-reasons"),
+                JobStateMessage = map.MapFromDic<string?>(src, "job-state-message"),
+                NumberOfInterveningJobs = map.MapFromDic<int?>(src, "number-of-intervening-jobs"),
+            });
 
         }
     }

@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using AutoMapper;
 using SharpIpp.Model;
 using SharpIpp.Protocol.Extensions;
 
@@ -8,200 +6,169 @@ namespace SharpIpp.Protocol
 {
     internal partial class IppProtocol
     {
-        private static readonly IMapper Mapper;
+        private static readonly SimpleMapper Mapper = new SimpleMapper();
 
         static IppProtocol()
         {
-            var config = new MapperConfiguration(cfg =>
+            Mapper.CreateIppMap<int>();
+            Mapper.CreateIppMap<bool>();
+            Mapper.CreateIppMap<string>();
+            Mapper.CreateIppMap<DateTimeOffset>();
+            Mapper.CreateIppMap<Range>();
+            Mapper.CreateIppMap<Resolution>();
+            Mapper.CreateIppMap<StringWithLanguage>();
+
+
+            Mapper.CreateIppMap<int, IppOperation>((src, map) => (IppOperation)(short)src);
+            Mapper.CreateIppMap<int, Finishings>((src, map) => (Finishings)src);
+            Mapper.CreateIppMap<int, IppStatusCode>((src, map) => (IppStatusCode)src);
+            Mapper.CreateIppMap<int, JobState>((src, map) => (JobState)src);
+            Mapper.CreateIppMap<int, Orientation>((src, map) => (Orientation)src);
+            Mapper.CreateIppMap<int, PrinterState>((src, map) => (PrinterState)src);
+            Mapper.CreateIppMap<int, PrintQuality>((src, map) => (PrintQuality)src);
+            Mapper.CreateIppMap<int, ResolutionUnit>((src, map) => (ResolutionUnit)src);
+
+
+            ConfigureJobHoldUntil(Mapper);
+            ConfigureMultipleDocumentHandling(Mapper);
+            ConfigureSides(Mapper);
+            ConfigureJobSheets(Mapper);
+            ConfigureCompression(Mapper);
+            ConfigurePrintScaling(Mapper);
+            ConfigurePrintJobRequest(Mapper);
+            ConfigureGetPrinterAttributesResponse(Mapper);
+            ConfigureGetJobAttributesResponse(Mapper);
+            ConfigureGetJobsResponse(Mapper);
+        }
+
+        private static void ConfigureJobHoldUntil(SimpleMapper map)
+        {
+            map.CreateIppMap<string, JobHoldUntil>((src, ctx) => src switch
             {
-                cfg.AllowNullCollections = true;
-                cfg.AllowNullDestinationValues = true;
-
-
-                cfg.CreateMap<int, IppOperation>().ConvertUsing((src, _) =>(IppOperation)src);
-                cfg.CreateIppMap<object, int>(true);
-                cfg.CreateIppMap<object, bool>(true);
-                cfg.CreateIppMap<object, DateTimeOffset>(true);
-                cfg.CreateIppMap<object, Range>(true);
-                cfg.CreateIppMap<object, Resolution>(true);
-                cfg.CreateIppMap<object, StringWithLanguage>(true);
-
-                cfg.CreateIppMap<int, IppOperation>();
-                cfg.CreateIppMap<int, Finishings>();
-                cfg.CreateIppMap<int, IppStatusCode>();
-                cfg.CreateIppMap<int, JobState>();
-                cfg.CreateIppMap<int, Orientation>();
-                cfg.CreateIppMap<int, PrinterState>();
-                cfg.CreateIppMap<int, PrintQuality>();
-                cfg.CreateIppMap<int, ResolutionUnit>();
-
-                cfg.CreateIppMap<string, JobHoldUntil>();
-                cfg.CreateIppMap<string, JobSheets>();
-                cfg.CreateIppMap<string, MultipleDocumentHandling>();
-                cfg.CreateIppMap<string, Sides>();
-                cfg.CreateIppMap<string, Compression>();
-                cfg.CreateIppMap<string, PrintScaling>();
-
-
-                cfg.CreateMap<object, string?>().ConvertUsing((src, __) => src is string i ? i : null);
-                cfg.CreateMap<NoValue, string[]?>().ConvertUsing((_, __) => null);
-                cfg.CreateMap<string, string[]>().ConvertUsing((src, _) => new[] {src});
-
-                ConfigureJobHoldUntil(cfg);
-                ConfigureMultipleDocumentHandling(cfg);
-                ConfigureSides(cfg);
-                ConfigureJobSheets(cfg);
-                ConfigureCompression(cfg);
-                ConfigurePrintScaling(cfg);
-                ConfigurePrintJobRequest(cfg);
-                ConfigureGetPrinterAttributesResponse(cfg);
-                ConfigureGetJobAttributesResponse(cfg);
-                ConfigureGetJobsResponse(cfg);
+                "no-hold" => JobHoldUntil.NoHold,
+                "indefinite" => JobHoldUntil.Indefinite,
+                "day-time" => JobHoldUntil.DayTime,
+                "evening" => JobHoldUntil.Evening,
+                "night" => JobHoldUntil.Night,
+                "weekend" => JobHoldUntil.Weekend,
+                "second-shift" => JobHoldUntil.SecondShift,
+                "third-shift" => JobHoldUntil.ThirdShift,
+                _ => JobHoldUntil.Unsupported
             });
 
-            Mapper = config.CreateMapper();
+            map.CreateMap<JobHoldUntil, string>((src, ctx) => src switch
+            {
+                JobHoldUntil.NoHold => "no-hold",
+                JobHoldUntil.Indefinite => "indefinite",
+                JobHoldUntil.DayTime => "day-time",
+                JobHoldUntil.Evening => "evening",
+                JobHoldUntil.Night => "night",
+                JobHoldUntil.Weekend => "weekend",
+                JobHoldUntil.SecondShift => "second-shift",
+                JobHoldUntil.ThirdShift => "third-shift",
+                _ => "unsupported"
+            });
         }
 
-        private static void ConfigureJobHoldUntil(IMapperConfigurationExpression cfg)
+        private static void ConfigureMultipleDocumentHandling(SimpleMapper map)
         {
-            cfg.CreateMap<object, JobHoldUntil>()
-               .ConstructUsing((src, ctx) => src switch
-                {
-                    "no-hold" => JobHoldUntil.NoHold,
-                    "indefinite" => JobHoldUntil.Indefinite,
-                    "day-time" => JobHoldUntil.DayTime,
-                    "evening" => JobHoldUntil.Evening,
-                    "night" => JobHoldUntil.Night,
-                    "weekend" => JobHoldUntil.Weekend,
-                    "second-shift" => JobHoldUntil.SecondShift,
-                    "third-shift" => JobHoldUntil.ThirdShift,
-                    _ => JobHoldUntil.Unsupported
-                });
+            map.CreateIppMap<string, MultipleDocumentHandling>((src, ctx) => src switch
+            {
+                "single-document" => MultipleDocumentHandling.SingleDocument,
+                "separate-documents-uncollated-copies" =>
+                MultipleDocumentHandling.SeparateDocumentsUncollatedCopies,
+                "separate-documents-collated-copies" => MultipleDocumentHandling.SeparateDocumentsCollatedCopies,
+                "single-document-new-sheet" => MultipleDocumentHandling.SingleDocumentNewSheet,
+                _ => MultipleDocumentHandling.Unsupported
+            });
 
-            cfg.CreateMap<JobHoldUntil, string>()
-               .ConstructUsing((src, ctx) => src switch
-                {
-                    JobHoldUntil.NoHold => "no-hold",
-                    JobHoldUntil.Indefinite => "indefinite",
-                    JobHoldUntil.DayTime => "day-time",
-                    JobHoldUntil.Evening => "evening",
-                    JobHoldUntil.Night => "night",
-                    JobHoldUntil.Weekend => "weekend",
-                    JobHoldUntil.SecondShift => "second-shift",
-                    JobHoldUntil.ThirdShift => "third-shift",
-                    _ => "unsupported"
-                });
+            map.CreateMap<MultipleDocumentHandling, string>((src, ctx) => src switch
+            {
+                MultipleDocumentHandling.SingleDocument => "single-document",
+                MultipleDocumentHandling.SeparateDocumentsUncollatedCopies =>
+                "separate-documents-uncollated-copies",
+                MultipleDocumentHandling.SeparateDocumentsCollatedCopies => "separate-documents-collated-copies",
+                MultipleDocumentHandling.SingleDocumentNewSheet => "single-document-new-sheet",
+                _ => "unsupported"
+            });
         }
 
-        private static void ConfigureMultipleDocumentHandling(IMapperConfigurationExpression cfg)
+        private static void ConfigureSides(SimpleMapper map)
         {
-            cfg.CreateMap<object, MultipleDocumentHandling>()
-               .ConstructUsing((src, ctx) => src switch
-                {
-                    "single-document" => MultipleDocumentHandling.SingleDocument,
-                    "separate-documents-uncollated-copies" =>
-                    MultipleDocumentHandling.SeparateDocumentsUncollatedCopies,
-                    "separate-documents-collated-copies" => MultipleDocumentHandling.SeparateDocumentsCollatedCopies,
-                    "single-document-new-sheet" => MultipleDocumentHandling.SingleDocumentNewSheet,
-                    _ => MultipleDocumentHandling.Unsupported
-                });
+            map.CreateIppMap<string, Sides>((src, ctx) => src switch
+            {
+                "one-sided" => Sides.OneSided,
+                "two-sided-long-edge" => Sides.TwoSidedLongEdge,
+                "two-sided-short-edge" => Sides.TwoSidedShortEdge,
+                _ => Sides.Unsupported
+            });
 
-            cfg.CreateMap<MultipleDocumentHandling, string>()
-               .ConstructUsing((src, ctx) => src switch
-                {
-                    MultipleDocumentHandling.SingleDocument => "single-document",
-                    MultipleDocumentHandling.SeparateDocumentsUncollatedCopies =>
-                    "separate-documents-uncollated-copies",
-                    MultipleDocumentHandling.SeparateDocumentsCollatedCopies => "separate-documents-collated-copies",
-                    MultipleDocumentHandling.SingleDocumentNewSheet => "single-document-new-sheet",
-                    _ => "unsupported"
-                });
+            map.CreateMap<Sides, string>((src, ctx) => src switch
+            {
+                Sides.OneSided => "one-sided",
+                Sides.TwoSidedLongEdge => "two-sided-long-edge",
+                Sides.TwoSidedShortEdge => "two-sided-short-edge",
+                _ => "unsupported"
+            });
         }
 
-        private static void ConfigureSides(IMapperConfigurationExpression cfg)
+        private static void ConfigureJobSheets(SimpleMapper map)
         {
-            cfg.CreateMap<object, Sides>()
-               .ConstructUsing((src, ctx) => src switch
-                {
-                    "one-sided" => Sides.OneSided,
-                    "two-sided-long-edge" => Sides.TwoSidedLongEdge,
-                    "two-sided-short-edge" => Sides.TwoSidedShortEdge,
-                    _ => Sides.Unsupported
-                });
+            map.CreateIppMap<string, JobSheets>((src, ctx) => src switch
+            {
+                "none" => JobSheets.None,
+                "standard" => JobSheets.Standard,
+                _ => JobSheets.Unsupported
+            });
 
-            cfg.CreateMap<Sides, string>()
-               .ConstructUsing((src, ctx) => src switch
-                {
-                    Sides.OneSided => "one-sided",
-                    Sides.TwoSidedLongEdge => "two-sided-long-edge",
-                    Sides.TwoSidedShortEdge => "two-sided-short-edge",
-                    _ => "unsupported"
-                });
+            map.CreateMap<JobSheets, string>((src, ctx) => src switch
+            {
+                JobSheets.None => "none",
+                JobSheets.Standard => "standard",
+                _ => "unsupported"
+            });
         }
 
-        private static void ConfigureJobSheets(IMapperConfigurationExpression cfg)
+        private static void ConfigureCompression(SimpleMapper map)
         {
-            cfg.CreateMap<object, JobSheets>()
-               .ConstructUsing((src, ctx) => src switch
-                {
-                    "none" => JobSheets.None,
-                    "standard" => JobSheets.Standard,
-                    _ => JobSheets.Unsupported
-                });
+            map.CreateIppMap<string, Compression>((src, ctx) => src switch
+            {
+                "none" => Compression.None,
+                "deflate" => Compression.Deflate,
+                "gzip" => Compression.Gzip,
+                _ => Compression.Unsupported
+            });
 
-            cfg.CreateMap<JobSheets, string>()
-               .ConstructUsing((src, ctx) => src switch
-                {
-                    JobSheets.None => "none",
-                    JobSheets.Standard => "standard",
-                    _ => "unsupported"
-                });
+            map.CreateMap<Compression, string>((src, ctx) => src switch
+            {
+                Compression.None => "none",
+                Compression.Deflate => "deflate",
+                Compression.Gzip => "gzip",
+                _ => "unsupported"
+            });
         }
-
-        private static void ConfigureCompression(IMapperConfigurationExpression cfg)
+        private static void ConfigurePrintScaling(SimpleMapper map)
         {
-            cfg.CreateMap<object, Compression>()
-               .ConstructUsing((src, ctx) => src switch
-                {
-                    "none" => Compression.None,
-                    "deflate" => Compression.Deflate,
-                    "gzip" => Compression.Gzip,
-                    _ => Compression.Unsupported
-                });
-
-            cfg.CreateMap<Compression, string>()
-               .ConstructUsing((src, ctx) => src switch
-                {
-                    Compression.None => "none",
-                    Compression.Deflate => "deflate",
-                    Compression.Gzip => "gzip",
-                    _ => "unsupported"
-                });
-        }
-        private static void ConfigurePrintScaling(IMapperConfigurationExpression cfg)
-        {
-            cfg.CreateMap<object, PrintScaling>()
-               .ConstructUsing((src, ctx) =>
+            map.CreateIppMap<string, PrintScaling>((src, ctx) =>
                     src switch
-                {
-                    "auto" => PrintScaling.Auto,
-                    "auto-fit" => PrintScaling.AutoFit,
-                    "fill" => PrintScaling.Fill,
-                    "fit" => PrintScaling.Fit,
-                    "none" => PrintScaling.None,
-                    _ => PrintScaling.Unsupported
-                });
+                    {
+                        "auto" => PrintScaling.Auto,
+                        "auto-fit" => PrintScaling.AutoFit,
+                        "fill" => PrintScaling.Fill,
+                        "fit" => PrintScaling.Fit,
+                        "none" => PrintScaling.None,
+                        _ => PrintScaling.Unsupported
+                    });
 
-            cfg.CreateMap<PrintScaling, string>()
-               .ConstructUsing((src, ctx) => src switch
-                {
-                    PrintScaling.Auto => "auto",
-                    PrintScaling.AutoFit => "auto-fit",
-                    PrintScaling.Fill => "fill",
-                    PrintScaling.Fit => "fit",
-                    PrintScaling.None => "None",
-                    _ => "unsupported"
-                });
+            map.CreateMap<PrintScaling, string>((src, ctx) => src switch
+            {
+                PrintScaling.Auto => "auto",
+                PrintScaling.AutoFit => "auto-fit",
+                PrintScaling.Fill => "fill",
+                PrintScaling.Fit => "fit",
+                PrintScaling.None => "None",
+                _ => "unsupported"
+            });
         }
     }
 }

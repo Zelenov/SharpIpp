@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using AutoMapper;
 using SharpIpp.Exceptions;
 using SharpIpp.Model;
 using SharpIpp.Protocol.Extensions;
@@ -51,17 +49,25 @@ namespace SharpIpp.Protocol
 
             var attributes = response.Attributes;
             var printJobResponse = Mapper.Map<GetJobsResponse>(attributes);
+            printJobResponse.IppVersion = response.Version;
+            printJobResponse.RequestId = response.RequestId;
             return printJobResponse;
         }
 
-        private static void ConfigureGetJobsResponse(IMapperConfigurationExpression cfg)
+        private static void ConfigureGetJobsResponse(SimpleMapper mapper)
         {
-            cfg.CreateMap<GetJobsRequest, IppRequest>()
-               .ForMember(dst => dst.IppOperation, opt => opt.MapFrom(_ => IppOperation.GetJobs));
+            mapper.CreateMap<GetJobsRequest, IppRequest>((src, map) => new IppRequest
+            {
+                IppOperation = IppOperation.GetJobs,
+                IppVersion = src.IppVersion,
+                RequestId = src.RequestId
+            });
 
             //https://tools.ietf.org/html/rfc2911#section-4.4
-            cfg.CreateMap<IDictionary<string, IppAttribute[]>, GetJobsResponse>()
-               .ForMember(dst => dst.AllAttributes, opt => opt.MapFrom(src => src));
+            mapper.CreateMap<IDictionary<string, IppAttribute[]>, GetJobsResponse>((src, map) => new GetJobsResponse
+            {
+                AllAttributes = src
+            });
         }
     }
 }

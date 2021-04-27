@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using AutoMapper;
 using SharpIpp.Exceptions;
 using SharpIpp.Model;
 using SharpIpp.Protocol.Extensions;
@@ -60,50 +59,59 @@ namespace SharpIpp.Protocol
 
             var attributes = response.Attributes;
             var printJobResponse = Mapper.Map<GetJobAttributesResponse>(attributes);
+            printJobResponse.IppVersion = response.Version;
+            printJobResponse.RequestId = response.RequestId;
             return printJobResponse;
         }
 
-        private static void ConfigureGetJobAttributesResponse(IMapperConfigurationExpression cfg)
+        private static void ConfigureGetJobAttributesResponse(SimpleMapper mapper)
         {
-            cfg.CreateMap<GetJobAttributesRequest, IppRequest>()
-               .ForMember(dst => dst.IppOperation, opt => opt.MapFrom(_ => IppOperation.GetJobAttributes));
+            mapper.CreateMap<GetJobAttributesRequest, IppRequest>((src, map) => new IppRequest
+            {
+                IppOperation = IppOperation.GetJobAttributes,
+                IppVersion = src.IppVersion,
+                RequestId = src.RequestId
+            });
 
             //https://tools.ietf.org/html/rfc2911#section-4.4
-            cfg.CreateMap<IDictionary<string, IppAttribute[]>, GetJobAttributesResponse>()
-               .ForMember(dst => dst.AllAttributes, opt => opt.MapFrom(src => src))
-               .ForIppMember(dst => dst.JobId, "job-id")
-               .ForIppMember(dst => dst.JobPrinterUri, "job-printer-uri")
-               .ForIppMember(dst => dst.JobName, "job-name")
-               .ForIppMember(dst => dst.JobOriginatingUserName, "job-originating-user-name")
-               .ForIppMember(dst => dst.JobSheets, "job-sheets")
-               .ForIppMember(dst => dst.Copies, "copies")
-               .ForIppMember(dst => dst.MultipleDocumentHandling, "multiple-document-handling")
-               .ForIppMember(dst => dst.PrintQuality, "print-quality")
-               .ForIppMember(dst => dst.PrinterResolution, "printer-resolution")
-               .ForIppMember(dst => dst.Sides, "sides")
-               .ForIppMember(dst => dst.Media, "media")
-               .ForIppMember(dst => dst.NumberUp, "number-up")
-               .ForIppMember(dst => dst.OrientationRequested, "orientation-requested")
-               .ForIppMember(dst => dst.Finishings, "finishings")
-               .ForIppMember(dst => dst.JobKOctetsProcessed, "job-k-octets-processed")
-               .ForIppMember(dst => dst.JobImpressions, "job-impressions")
-               .ForIppMember(dst => dst.JobImpressionsCompleted, "job-impressions-completed")
-               .ForIppMember(dst => dst.JobMediaSheets, "job-media-sheets")
-               .ForIppMember(dst => dst.JobMediaSheetsCompleted, "job-media-sheets-completed")
-               .ForIppMember(dst => dst.JobState, "job-state")
-               .ForIppMember(dst => dst.Compression, "compression")
-               .ForIppMember(dst => dst.DocumentFormat, "document-format")
-               .ForIppMember(dst => dst.DocumentName, "document-name")
-               .ForIppMember(dst => dst.IppAttributeFidelity, "ipp-attribute-fidelity")
-               .ForIppMember(dst => dst.JobStateMessage, "job-state-message")
-               .ForIppMember(dst => dst.JobStateReasons, "job-state-reasons")
-               .ForIppMember(dst => dst.DateTimeAtCreation, "date-time-at-creation")
-               .ForIppMember(dst => dst.DateTimeAtProcessing, "date-time-at-processing")
-               .ForIppMember(dst => dst.DateTimeAtCompleted, "date-time-at-completed")
-               .ForIppMember(dst => dst.TimeAtCreation, "time-at-creation")
-               .ForIppMember(dst => dst.TimeAtProcessing, "time-at-processing")
-               .ForIppMember(dst => dst.TimeAtCompleted, "time-at-completed")
-               .ForIppMember(dst => dst.JobPrinterUpTime, "job-printer-up-time");
+            mapper.CreateMap<IDictionary<string, IppAttribute[]>, GetJobAttributesResponse>((src, map) =>
+                new GetJobAttributesResponse
+                {
+                    AllAttributes = src,
+                    Compression = map.MapFromDic<Compression?>(src, "compression"),
+                    Copies = map.MapFromDic<int?>(src, "copies"),
+                    DateTimeAtCompleted = map.MapFromDic<DateTimeOffset?>(src, "date-time-at-completed"),
+                    DateTimeAtCreation = map.MapFromDic<DateTimeOffset?>(src, "date-time-at-creation"),
+                    DateTimeAtProcessing = map.MapFromDic<DateTimeOffset?>(src, "date-time-at-processing"),
+                    DocumentFormat = map.MapFromDic<string?>(src, "document-format"),
+                    DocumentName = map.MapFromDic<string?>(src, "document-name"),
+                    Finishings = map.MapFromDic<Finishings?>(src, "finishings"),
+                    IppAttributeFidelity = map.MapFromDic<bool?>(src, "ipp-attribute-fidelity"),
+                    JobId = map.MapFromDic<int?>(src, "job-id"),
+                    JobImpressions = map.MapFromDic <int?> (src, "job-impressions"),
+                    JobImpressionsCompleted = map.MapFromDic<int?>(src, "job-impressions-completed"),
+                    JobKOctetsProcessed = map.MapFromDic<int?>(src, "job-k-octets-processed"),
+                    JobMediaSheets = map.MapFromDic<int?>(src, "job-media-sheets"),
+                    JobMediaSheetsCompleted = map.MapFromDic<int?>(src, "job-media-sheets-completed"),
+                    JobName = map.MapFromDic<string?>(src, "job-name"),
+                    JobOriginatingUserName = map.MapFromDic<StringWithLanguage?>(src, "job-originating-user-name"),
+                    JobPrinterUpTime = map.MapFromDic<int?>(src, "job-printer-up-time"),
+                    JobPrinterUri = map.MapFromDic<string?>(src, "job-printer-uri"),
+                    JobSheets = map.MapFromDic<JobSheets?>(src, "job-sheets"),
+                    JobState = map.MapFromDic<JobState?>(src, "job-state"),
+                    JobStateMessage = map.MapFromDic<string?>(src, "job-state-message"),
+                    JobStateReasons = map.MapFromDicSetNull<string[]?>(src, "job-state-reasons"),
+                    Media = map.MapFromDic<string?>(src, "media"),
+                    MultipleDocumentHandling = map.MapFromDic<MultipleDocumentHandling?>(src, "multiple-document-handling"),
+                    NumberUp = map.MapFromDic<int?>(src, "number-up"),
+                    OrientationRequested = map.MapFromDic<Orientation?>(src, "orientation-requested"),
+                    PrinterResolution = map.MapFromDic<Resolution?>(src, "printer-resolution"),
+                    PrintQuality = map.MapFromDic<PrintQuality?>(src, "print-quality"),
+                    Sides = map.MapFromDic<Sides?>(src, "sides"),
+                    TimeAtCompleted = map.MapFromDic<int?>(src, "time-at-completed"),
+                    TimeAtCreation = map.MapFromDic<int?>(src, "time-at-creation"),
+                    TimeAtProcessing = map.MapFromDic<int?>(src, "time-at-processing")
+                });
         }
     }
 }

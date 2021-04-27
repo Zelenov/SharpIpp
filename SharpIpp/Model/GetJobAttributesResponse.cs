@@ -6,7 +6,7 @@ namespace SharpIpp.Model
     public class GetJobAttributesResponse
     {
         public IppVersion IppVersion { get; set; } = IppVersion.V11;
-        public int RequestId { get; set; } = 1;
+        public int? RequestId { get; set; } = 1;
 
         /// <summary>
         ///     This REQUIRED attribute contains the ID of the job.  The Printer, on
@@ -19,7 +19,7 @@ namespace SharpIpp.Model
         /// </summary>
         /// <example>63</example>
         /// <code>job-id</code>
-        public int JobId { get; set; }
+        public int? JobId { get; set; }
 
         /// <summary>
         ///     This REQUIRED attribute identifies the Printer object that created
@@ -34,7 +34,7 @@ namespace SharpIpp.Model
         /// </summary>
         /// <example>ipp://10.30.254.250:631/ipp/print</example>
         /// <code>job-printer-uri</code>
-        public string JobPrinterUri { get; set; } = null!;
+        public string? JobPrinterUri { get; set; }
 
         /// <summary>
         ///     This REQUIRED attribute is the name of the job.  It is a name that is
@@ -49,7 +49,7 @@ namespace SharpIpp.Model
         /// </summary>
         /// <example>job63</example>
         /// <code>job-name</code>
-        public string JobName { get; set; } = null!;
+        public string? JobName { get; set; }
 
         /// <summary>
         ///     This REQUIRED attribute contains the name of the end user that
@@ -63,7 +63,7 @@ namespace SharpIpp.Model
         /// </summary>
         /// <example>anonymous (en)</example>
         /// <code>job-originating-user-name</code>
-        public StringWithLanguage JobOriginatingUserName { get; set; }
+        public StringWithLanguage? JobOriginatingUserName { get; set; }
 
         /// <summary>
         ///     This attribute determines which job start/end sheet(s), if any, MUST
@@ -72,7 +72,7 @@ namespace SharpIpp.Model
         /// </summary>
         /// <example>none</example>
         /// <code>job-sheets</code>
-        public JobSheets JobSheets { get; set; }
+        public JobSheets? JobSheets { get; set; }
 
         /// <summary>
         ///     This attribute specifies the number of copies to be printed.
@@ -84,7 +84,7 @@ namespace SharpIpp.Model
         /// </summary>
         /// <example>1</example>
         /// <code>copies</code>
-        public int Copies { get; set; }
+        public int? Copies { get; set; }
 
         /// <summary>
         ///     This attribute is relevant only if a job consists of two or more
@@ -102,7 +102,7 @@ namespace SharpIpp.Model
         /// </summary>
         /// <example>separate-documents-uncollated-copies</example>
         /// <code>multiple-document-handling</code>
-        public MultipleDocumentHandling MultipleDocumentHandling { get; set; }
+        public MultipleDocumentHandling? MultipleDocumentHandling { get; set; }
 
         /// <summary>
         ///     This attribute specifies the print quality that the Printer uses for
@@ -111,7 +111,7 @@ namespace SharpIpp.Model
         /// </summary>
         /// <example>4</example>
         /// <code>print-quality</code>
-        public PrintQuality PrintQuality { get; set; }
+        public PrintQuality? PrintQuality { get; set; }
 
         /// <summary>
         ///     This attribute identifies the resolution that Printer uses for the
@@ -120,7 +120,7 @@ namespace SharpIpp.Model
         /// </summary>
         /// <example>600x600 (dpi)</example>
         /// <code>printer-resolution</code>
-        public Resolution PrinterResolution { get; set; }
+        public Resolution? PrinterResolution { get; set; }
 
         /// <summary>
         ///     This attribute specifies how print-stream pages are to be imposed
@@ -130,7 +130,7 @@ namespace SharpIpp.Model
         /// </summary>
         /// <example>one-sided</example>
         /// <code>sides</code>
-        public Sides Sides { get; set; }
+        public Sides? Sides { get; set; }
 
         /// <summary>
         ///     This attribute identifies the medium that the Printer uses for all
@@ -156,7 +156,7 @@ namespace SharpIpp.Model
         /// </summary>
         /// <example>iso_a4_210x297mm</example>
         /// <code>media</code>
-        public string Media { get; set; } = null!;
+        public string? Media { get; set; }
 
         /// <summary>
         ///     This attribute specifies the number of print-stream pages to impose
@@ -165,7 +165,7 @@ namespace SharpIpp.Model
         /// </summary>
         /// <example>1</example>
         /// <code>number-up</code>
-        public int NumberUp { get; set; }
+        public int? NumberUp { get; set; }
 
         /// <summary>
         ///     This attribute indicates the desired orientation for printed print-
@@ -192,7 +192,7 @@ namespace SharpIpp.Model
         /// </summary>
         /// <example>3</example>
         /// <code>orientation-requested</code>
-        public Orientation OrientationRequested { get; set; }
+        public Orientation? OrientationRequested { get; set; }
 
         /// <summary>
         ///     This attribute identifies the finishing operations that the Printer
@@ -203,7 +203,7 @@ namespace SharpIpp.Model
         /// </summary>
         /// <example>3</example>
         /// <code>finishings</code>
-        public Finishings Finishings { get; set; }
+        public Finishings? Finishings { get; set; }
 
         /// <summary>
         ///     This attribute specifies the total number of octets processed in K
@@ -254,7 +254,7 @@ namespace SharpIpp.Model
         /// </summary>
         /// <example>0</example>
         /// <code>job-impressions-completed</code>
-        public int JobImpressionsCompleted { get; set; }
+        public int? JobImpressionsCompleted { get; set; }
 
         /// <summary>
         ///     This attribute specifies the total number of media sheets to be
@@ -295,7 +295,7 @@ namespace SharpIpp.Model
         /// </summary>
         /// <example>9</example>
         /// <code>job-state</code>
-        public JobState JobState { get; set; }
+        public JobState? JobState { get; set; }
 
         /// <summary>
         ///     The client OPTIONALLY supplies this attribute.  The Printer
@@ -306,7 +306,7 @@ namespace SharpIpp.Model
         /// </summary>
         /// <example>none</example>
         /// <code>compression</code>
-        public Compression Compression { get; set; }
+        public Compression? Compression { get; set; }
 
         /// <summary>
         ///     The client OPTIONALLY supplies this attribute.  The Printer
@@ -316,7 +316,7 @@ namespace SharpIpp.Model
         /// </summary>
         /// <example>application/octet-stream</example>
         /// <code>document-format</code>
-        public string DocumentFormat { get; set; } = null!;
+        public string? DocumentFormat { get; set; }
 
         /// <summary>
         ///     The client OPTIONALLY supplies this attribute.  The Printer
@@ -335,7 +335,7 @@ namespace SharpIpp.Model
         /// </summary>
         /// <example>job63</example>
         /// <code>document-name</code>
-        public string DocumentName { get; set; } = null!;
+        public string? DocumentName { get; set; }
 
         /// <summary>
         ///     The client OPTIONALLY supplies this attribute.  The Printer
@@ -353,7 +353,7 @@ namespace SharpIpp.Model
         /// </summary>
         /// <example>False</example>
         /// <code>ipp-attribute-fidelity</code>
-        public bool IppAttributeFidelity { get; set; }
+        public bool? IppAttributeFidelity { get; set; }
 
         /// <summary>
         ///     The Printer object OPTIONALLY returns the Job object's OPTIONAL
@@ -365,7 +365,7 @@ namespace SharpIpp.Model
         /// </summary>
         /// <example>The job completed successfully</example>
         /// <code>job-state-message</code>
-        public string JobStateMessage { get; set; } = null!;
+        public string? JobStateMessage { get; set; }
 
         /// <summary>
         ///     The Printer object MUST return the Job object's REQUIRED "job-
@@ -373,7 +373,7 @@ namespace SharpIpp.Model
         /// </summary>
         /// <example>job-completed-successfully</example>
         /// <code>job-state-reasons</code>
-        public string[] JobStateReasons { get; set; } = null!;
+        public string[]? JobStateReasons { get; set; }
 
         /// <summary>
         ///     This attribute indicates the date and time at which the Job object
@@ -382,7 +382,7 @@ namespace SharpIpp.Model
         /// </summary>
         /// <example>22.04.2021 20:13:21 +03:00</example>
         /// <code>date-time-at-creation</code>
-        public DateTimeOffset DateTimeAtCreation { get; set; }
+        public DateTimeOffset? DateTimeAtCreation { get; set; }
 
         /// <summary>
         ///     This attribute indicates the date and time at which the Job object
@@ -392,7 +392,7 @@ namespace SharpIpp.Model
         /// </summary>
         /// <example>22.04.2021 20:13:22 +03:00</example>
         /// <code>date-time-at-processing</code>
-        public DateTimeOffset DateTimeAtProcessing { get; set; }
+        public DateTimeOffset? DateTimeAtProcessing { get; set; }
 
         /// <summary>
         ///     This attribute indicates the date and time at which the Job object
@@ -401,7 +401,7 @@ namespace SharpIpp.Model
         /// </summary>
         /// <example>22.04.2021 20:13:22 +03:00</example>
         /// <code>date-time-at-completed</code>
-        public DateTimeOffset DateTimeAtCompleted { get; set; }
+        public DateTimeOffset? DateTimeAtCompleted { get; set; }
 
         /// <summary>
         ///     This REQUIRED attribute indicates the time at which the Job object
@@ -410,7 +410,7 @@ namespace SharpIpp.Model
         /// </summary>
         /// <example>197753</example>
         /// <code>time-at-creation</code>
-        public int TimeAtCreation { get; set; }
+        public int? TimeAtCreation { get; set; }
 
         /// <summary>
         ///     This REQUIRED attribute indicates the time at which the Job object
@@ -421,7 +421,7 @@ namespace SharpIpp.Model
         /// </summary>
         /// <example>197754</example>
         /// <code>time-at-processing</code>
-        public int TimeAtProcessing { get; set; }
+        public int? TimeAtProcessing { get; set; }
 
         /// <summary>
         ///     This REQUIRED attribute indicates the time at which the Job object
@@ -432,7 +432,7 @@ namespace SharpIpp.Model
         /// </summary>
         /// <example>197754</example>
         /// <code>time-at-completed</code>
-        public int TimeAtCompleted { get; set; }
+        public int? TimeAtCompleted { get; set; }
 
         /// <summary>
         ///     This REQUIRED Job Description attribute indicates the amount of time
@@ -443,7 +443,7 @@ namespace SharpIpp.Model
         /// </summary>
         /// <example>197775</example>
         /// <code>job-printer-up-time</code>
-        public int JobPrinterUpTime { get; set; }
+        public int? JobPrinterUpTime { get; set; }
 
 
         public IDictionary<string, IppAttribute[]> AllAttributes { get; set; } = null!;

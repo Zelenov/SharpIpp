@@ -10,7 +10,7 @@
     <PackageIcon>ipp256.png</PackageIcon>
     <PackageIconUrl />
     <PackageProjectUrl>https://github.com/Zelenov/SharpIpp</PackageProjectUrl>
-    <Version>0.0.7.0</Version>
+    <Version>0.0.8.0</Version>
     <Authors>Evgeny Zelenov</Authors>
     <Description>C# implementation of Internet Printing Protocol/1.1</Description>
     <PackageTags>ipp, Internet Printing Protocol, rfc2911, print, printer</PackageTags>
@@ -21,10 +21,6 @@
     <RepositoryUrl>https://github.com/Zelenov/SharpIpp.git</RepositoryUrl> 
     <RepositoryType>git</RepositoryType> 
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="AutoMapper" Version="6.0.2" />
-  </ItemGroup>
    <ItemGroup>
     <None Include="..\ipp256.png">
       <Pack>True</Pack>

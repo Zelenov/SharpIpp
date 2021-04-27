@@ -2,68 +2,83 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Runtime.CompilerServices;
-using AutoMapper;
 using SharpIpp.Model;
-
+#nullable enable
 namespace SharpIpp.Protocol.Extensions
 {
     internal static class MemberConfigurationExpressionExtensions
     {
-        public static void MapFromDicSet<TDestination, TMember>(
-            this IMemberConfigurationExpression<IDictionary<string, IppAttribute[]>, TDestination, TMember> config,
-            string key) where TMember : IEnumerable
+        public static void CreateIppMap<T>(this SimpleMapper mapper) where T : notnull
         {
-            config.MapFrom(src => !src.ContainsKey(key) ? (object)NoValue.Instance : src[key].Select(x => x.Value));
+            mapper.CreateIppMap<T,T>((i, _)=>i);
         }
-        public static void CreateIppMap<TSource, TDestination>(this IProfileExpression cfg, bool simpleType = false) where TDestination: struct
+
+        public static void CreateIppMap<TSource, TDestination>(this SimpleMapper mapper,
+            Func<TSource, SimpleMapper, TDestination> mapFunc) where TSource: notnull
         {
-            cfg.CreateMap<NoValue, TDestination?>().ConvertUsing((_, __) => null);
-            cfg.CreateMap<NoValue, TDestination[]?>().ConvertUsing((_, __) => null);
-            if (simpleType)
-                cfg.CreateMap<object, TDestination?>().ConvertUsing((src, __) => src is TDestination i ? i : (TDestination?)null);
-            else
-                cfg.CreateMap<object, TDestination?>().ConvertUsing((src, dst, ctx) => ctx.Mapper.Map<TDestination>(src));
-            if (typeof(TSource) != typeof(object))
+            Type destType = typeof(TDestination);
+            Type srcType = typeof(TSource);
+            mapper.CreateMap<TSource, TDestination>(mapFunc);
+            mapper.CreateMap<NoValue, TDestination[]?>((_, __) => null);
+            mapper.CreateMap<object, TDestination>((src, map) =>
             {
-                cfg.CreateMap<TSource, TDestination[]>()
-                   .ConvertUsing((src, dst, ctx) => ctx.Mapper.Map<TDestination[]>(new[] {src}));
-                cfg.CreateMap<TSource, TDestination[]?>()
-                   .ConvertUsing((src, dst, ctx) => ctx.Mapper.Map<TDestination[]?>(new[] {src}));
+                if (src == null)
+                    throw new ArgumentException($"Mapping null to non nullable type {typeof(object)} -> {destType}");
+     
+                return src is TSource source? map.Map<TDestination>(source) : throw new ArgumentException($"Mapping not supported {srcType} -> {destType}");
+            });
+
+            if (Nullable.GetUnderlyingType(destType) == null)
+            {
+                var destIsClass = destType.IsClass;
+                Type destNullable = destIsClass ? destType: typeof(Nullable<>).MakeGenericType(destType);
+                var destNull = destIsClass ? Convert.ChangeType(null, destNullable): Activator.CreateInstance(destNullable);
+                mapper.CreateMap(typeof(NoValue), destNullable, (_, __) => destNull);
+                if (!destIsClass)
+                {
+                    mapper.CreateMap(srcType, destNullable,
+                        (src, map) => src == null ? destNull : map.Map<TDestination>(src));
+                }
             }
+
+            mapper.CreateMap<TSource, TDestination[]>((src, map) => src != null ? map.Map<TDestination[]>(new[] {src}) :
+                throw new ArgumentException($"Mapping null to non nullable type {srcType} -> {destType}"));
+            mapper.CreateMap<TSource, TDestination[]?>((src, map) => src == null? null : map.Map<TDestination[]?>(new[] {src}));
+            mapper.CreateMap<TSource[], TDestination[]>((src, map) => src.Select(x=> map.Map<TDestination>(x)).ToArray());
+            mapper.CreateMap<TSource[], TDestination[]?>((src, map) => src.Select(x=> map.Map<TDestination>(x)).ToArray());
+            mapper.CreateMap<TSource[]?, TDestination[]?>((src, map) => src?.Select(x=> map.Map<TDestination>(x)).ToArray());
+
+            mapper.CreateMap<object[], TDestination[]>((src, map) => src.Select(map.Map<TDestination>).ToArray());
+            mapper.CreateMap<object[], TDestination[]?>((src, map) => src.Select(map.Map<TDestination>).ToArray());
+            mapper.CreateMap<object[]?, TDestination[]?>((src, map) => src?.Select(map.Map<TDestination>).ToArray());
+        }
+        
+        public static TDestination MapFromDicSet<TDestination>(
+            this SimpleMapper mapper,
+            IDictionary<string, IppAttribute[]> src,
+            string key) where TDestination : IEnumerable
+        {
+            var mapKey = !src.ContainsKey(key) ? (object) NoValue.Instance : src[key].Select(x => x.Value).ToArray();
+            return mapper.Map<TDestination>(mapKey);
         }
 
-        public static void MapFromDicSetNull<TDestination, TMember>(
-            this IMemberConfigurationExpression<IDictionary<string, IppAttribute[]>, TDestination, TMember> config,
-            string key) where TMember : IEnumerable?
+
+        public static TDestination MapFromDicSetNull<TDestination>(
+            this SimpleMapper mapper,
+            IDictionary<string, IppAttribute[]> src,
+            string key) where TDestination : IEnumerable?
         {
-            config.MapFrom(src => !src.ContainsKey(key) ? (object)NoValue.Instance : src[key].Select(x => x.Value));
+            var mapKey = !src.ContainsKey(key) ? (object)NoValue.Instance : src[key].Select(x => x.Value).ToArray();
+            return mapper.Map<TDestination>(mapKey);
         }
 
-        public static void MapFromDic<TDestination, TMember>(
-            this IMemberConfigurationExpression<IDictionary<string, IppAttribute[]>, TDestination, TMember> config,
-            string key)
+        public static TDestination MapFromDic<TDestination>(
+            this SimpleMapper mapper,
+            IDictionary<string, IppAttribute[]> src,
+            string key) 
         {
-            config.MapFrom(src => !src.ContainsKey(key) ? (object)NoValue.Instance : src[key].First().Value);
-        }
-        public static IMappingExpression<IDictionary<string, IppAttribute[]>, TDestination> ForIppMember<TDestination, TMember>(
-            this IMappingExpression<IDictionary<string, IppAttribute[]>, TDestination> mappingExpression,
-            Expression<Func<TDestination, TMember>> destinationMember, string key)
-        {
-            return mappingExpression.ForMember(destinationMember, opt => opt.MapFromDic(key));
-        }
-        public static IMappingExpression<IDictionary<string, IppAttribute[]>, TDestination> ForIppMemberSet<TDestination, TMember>(
-            this IMappingExpression<IDictionary<string, IppAttribute[]>, TDestination> mappingExpression,
-            Expression<Func<TDestination, TMember>> destinationMember, string key) where TMember : IEnumerable
-        {
-            return mappingExpression.ForMember(destinationMember, opt => opt.MapFromDicSet(key));
-        }
-        public static IMappingExpression<IDictionary<string, IppAttribute[]>, TDestination> ForIppMemberSetNull<TDestination, TMember>(
-            this IMappingExpression<IDictionary<string, IppAttribute[]>, TDestination> mappingExpression,
-            Expression<Func<TDestination, TMember>> destinationMember, string key) where TMember : IEnumerable?
-        {
-            return mappingExpression.ForMember(destinationMember, opt => opt.MapFromDicSetNull(key));
+            var mapKey = !src.ContainsKey(key) ? (object)NoValue.Instance : src[key].First().Value;
+            return mapper.Map<TDestination>(mapKey);
         }
     }
 }
