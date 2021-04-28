@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -18,6 +19,15 @@ namespace SharpIpp.Protocol
         /// <param name="stream"></param>
         public void Write(PrintJobRequest request, Stream stream)
         {
+            if (request == null)
+                throw new ArgumentException($"{nameof(request)}");
+            if (stream == null)
+                throw new ArgumentException($"{nameof(stream)}");
+            if (stream == null)
+                throw new ArgumentException($"{nameof(stream)}");
+            if (request.Document == null)
+                throw new ArgumentException($"{nameof(request.Document)} must be set");
+
             var r = Mapper.Map<IppRequest>(request);
             var operation = r.OperationAttributes;
             var job = r.JobAttributes;

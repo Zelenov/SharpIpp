@@ -80,5 +80,12 @@ namespace SharpIpp.Protocol.Extensions
             var mapKey = !src.ContainsKey(key) ? (object)NoValue.Instance : src[key].First().Value;
             return mapper.Map<TDestination>(mapKey);
         }
+        public static string? MapFromDicLanguage(
+            this SimpleMapper mapper,
+            IDictionary<string, IppAttribute[]> src,
+            string key)
+        {
+            return mapper.MapFromDic<StringWithLanguage?>(src, key)?.Language;
+        }
     }
 }

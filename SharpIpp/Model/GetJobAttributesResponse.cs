@@ -63,7 +63,11 @@ namespace SharpIpp.Model
         /// </summary>
         /// <example>anonymous (en)</example>
         /// <code>job-originating-user-name</code>
-        public StringWithLanguage? JobOriginatingUserName { get; set; }
+        public string? JobOriginatingUserName { get; set; }
+        /// <summary>
+        /// if <see cref="JobOriginatingUserName"/> had a language, this property stores it
+        /// </summary>
+        public string? JobOriginatingUserNameLanguage { get; set; }
 
         /// <summary>
         ///     This attribute determines which job start/end sheet(s), if any, MUST

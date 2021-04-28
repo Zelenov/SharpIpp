@@ -28,6 +28,11 @@ namespace SharpIpp.Protocol
             Mapper.CreateIppMap<int, PrintQuality>((src, map) => (PrintQuality)src);
             Mapper.CreateIppMap<int, ResolutionUnit>((src, map) => (ResolutionUnit)src);
 
+            //All name parameters can come as StringWithLanguage or string
+            //Mappers for string\language mapping 
+            Mapper.CreateIppMap<StringWithLanguage, string>((src, map) => src.Value);
+            Mapper.CreateIppMap<string, StringWithLanguage?>((src, map) => null);
+
 
             ConfigureJobHoldUntil(Mapper);
             ConfigureMultipleDocumentHandling(Mapper);

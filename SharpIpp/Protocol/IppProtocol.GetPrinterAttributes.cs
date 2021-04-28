@@ -19,6 +19,13 @@ namespace SharpIpp.Protocol
         /// <param name="stream"></param>
         public void Write(GetPrinterAttributesRequest request, Stream stream)
         {
+            if (request == null)
+                throw new ArgumentException($"{nameof(request)}");
+            if (stream == null)
+                throw new ArgumentException($"{nameof(stream)}");
+            if (stream == null)
+                throw new ArgumentException($"{nameof(stream)}");
+
             var r = Mapper.Map<IppRequest>(request);
             var operation = r.OperationAttributes;
 
