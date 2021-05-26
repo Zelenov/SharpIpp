@@ -5,7 +5,6 @@
     /// </summary>
     public enum Tag : byte
     {
-
         /// <summary>
         ///     unsupported
         /// </summary>

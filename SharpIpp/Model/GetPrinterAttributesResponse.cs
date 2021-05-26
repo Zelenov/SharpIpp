@@ -3,11 +3,8 @@ using System.Collections.Generic;
 
 namespace SharpIpp.Model
 {
-    public class GetPrinterAttributesResponse
+    public class GetPrinterAttributesResponse : IIppResponseMessage
     {
-        public IppVersion IppVersion { get; set; } = IppVersion.V11;
-        public int RequestId { get; set; } = 1;
-
         /// <summary>
         ///     printer-uri-supported
         /// </summary>
@@ -192,9 +189,12 @@ namespace SharpIpp.Model
         ///     pages-per-minute-color
         /// </summary>
         public int? PagesPerMinuteColor { get; set; }
+
         public PrintScaling? PrintScalingDefault { get; set; }
         public PrintScaling[]? PrintScalingSupported { get; set; }
-
-        public IDictionary<string, IppAttribute[]> AllAttributes { get; set; } = null!;
+        public IppVersion Version { get; set; }
+        public IppStatusCode StatusCode { get; set; }
+        public int RequestId { get; set; }
+        public List<IppSection> Sections { get; } = new List<IppSection>();
     }
 }

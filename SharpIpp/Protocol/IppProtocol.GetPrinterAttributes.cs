@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
-using SharpIpp.Exceptions;
 using SharpIpp.Model;
 using SharpIpp.Protocol.Extensions;
 
@@ -16,61 +13,37 @@ namespace SharpIpp.Protocol
         ///     https://tools.ietf.org/html/rfc2911#section-3.2.5.1
         /// </summary>
         /// <param name="request"></param>
-        /// <param name="stream"></param>
-        public void Write(GetPrinterAttributesRequest request, Stream stream)
-        {
-            if (request == null)
-                throw new ArgumentException($"{nameof(request)}");
-            if (stream == null)
-                throw new ArgumentException($"{nameof(stream)}");
-            if (stream == null)
-                throw new ArgumentException($"{nameof(stream)}");
+        public IppRequestMessage Construct(GetPrinterAttributesRequest request) => ConstructIppRequest(request);
 
-            var r = Mapper.Map<IppRequest>(request);
-            var operation = r.OperationAttributes;
-
-            operation.Add(new IppAttribute(Tag.Charset, "attributes-charset", "utf-8"));
-            operation.Add(new IppAttribute(Tag.NaturalLanguage, "attributes-natural-language", "en"));
-            operation.Add(new IppAttribute(Tag.Uri, "printer-uri", request.PrinterUri.ToString()));
-            if (request.RequestedAttributes != null)
-                operation.AddRange(request.RequestedAttributes.Select(requestedAttribute =>
-                    new IppAttribute(Tag.Keyword, "requested-attributes", requestedAttribute)));
-
-            r.OperationAttributes.Populate(request.AdditionalOperationAttributes);
-            r.JobAttributes.Populate(request.AdditionalJobAttributes);
-            using var writer = new BinaryWriter(stream, Encoding.ASCII, true);
-
-            Write(r, writer);
-        }
-
-
-        public GetPrinterAttributesResponse ReadGetPrinterAttributes(Stream stream)
-        {
-            var response = ReadStream(stream);
-            if (!response.IsSuccessfulStatusCode)
-                throw new IppResponseException(
-                    $"Printer returned error code in Get-Printer-Attributes response\n{response}", response);
-
-            var attributes = response.Attributes;
-            var printJobResponse = Mapper.Map<GetPrinterAttributesResponse>(attributes);
-            printJobResponse.RequestId = response.RequestId;
-            printJobResponse.IppVersion = response.Version;
-            return printJobResponse;
-        }
+        public GetPrinterAttributesResponse ConstructGetPrinterAttributesResponse(IIppResponseMessage ippResponse) =>
+            Construct<GetPrinterAttributesResponse>(ippResponse);
 
         private static void ConfigureGetPrinterAttributesResponse(SimpleMapper mapper)
         {
-            mapper.CreateMap<GetPrinterAttributesRequest, IppRequest>((src, map) => new IppRequest
+            mapper.CreateMap<GetPrinterAttributesRequest, IppRequestMessage>((src, map) =>
             {
-                IppOperation = IppOperation.GetPrinterAttributes,
-                IppVersion = src.IppVersion,
-                RequestId = src.RequestId
+                var dst = new IppRequestMessage {IppOperation = IppOperation.GetPrinterAttributes};
+                mapper.Map<IIppPrinterRequest, IppRequestMessage>(src, dst);
+                var operation = dst.OperationAttributes;
+                if (src.RequestedAttributes != null)
+                    operation.AddRange(src.RequestedAttributes.Select(requestedAttribute =>
+                        new IppAttribute(Tag.Keyword, "requested-attributes", requestedAttribute)));
+
+                dst.OperationAttributes.Populate(src.AdditionalOperationAttributes);
+                dst.JobAttributes.Populate(src.AdditionalJobAttributes);
+                return dst;
+            });
+
+            mapper.CreateMap<IppResponseMessage, GetPrinterAttributesResponse>((src, map) =>
+            {
+                var dst = map.Map<GetPrinterAttributesResponse>(src.AllAttributes());
+                map.Map<IppResponseMessage, IIppResponseMessage>(src, dst);
+                return dst;
             });
             //https://tools.ietf.org/html/rfc2911#section-4.4
             mapper.CreateMap<IDictionary<string, IppAttribute[]>, GetPrinterAttributesResponse>((src, map) =>
                 new GetPrinterAttributesResponse
                 {
-                    AllAttributes = src,
                     CharsetConfigured = map.MapFromDic<string?>(src, PrinterAttribute.CharsetConfigured),
                     CharsetSupported = map.MapFromDicSetNull<string[]?>(src, PrinterAttribute.CharsetSupported),
                     ColorSupported = map.MapFromDic<bool?>(src, PrinterAttribute.ColorSupported),

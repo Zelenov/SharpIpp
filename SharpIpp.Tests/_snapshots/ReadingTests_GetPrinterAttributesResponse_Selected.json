@@ -1,0 +1,71 @@
+{
+  "Version": 257,
+  "StatusCode": 0,
+  "RequestId": 1,
+  "PrinterUriSupported": null,
+  "UriSecuritySupported": null,
+  "UriAuthenticationSupported": null,
+  "PrinterName": null,
+  "PrinterLocation": null,
+  "PrinterInfo": null,
+  "PrinterMoreInfo": null,
+  "PrinterDriverInstaller": null,
+  "PrinterMakeAndModel": null,
+  "PrinterMoreInfoManufacturer": null,
+  "PrinterState": null,
+  "PrinterStateReasons": null,
+  "PrinterStateMessage": null,
+  "IppVersionsSupported": null,
+  "OperationsSupported": null,
+  "MultipleDocumentJobsSupported": null,
+  "CharsetConfigured": null,
+  "CharsetSupported": null,
+  "NaturalLanguageConfigured": null,
+  "GeneratedNaturalLanguageSupported": null,
+  "DocumentFormatDefault": null,
+  "DocumentFormatSupported": null,
+  "PrinterIsAcceptingJobs": null,
+  "QueuedJobCount": null,
+  "PrinterMessageFromOperator": null,
+  "ColorSupported": null,
+  "ReferenceUriSchemesSupported": null,
+  "PdlOverrideSupported": null,
+  "PrinterUpTime": null,
+  "PrinterCurrentTime": null,
+  "MultipleOperationTimeOut": null,
+  "CompressionSupported": null,
+  "JobKOctetsSupported": null,
+  "JobImpressionsSupported": null,
+  "JobMediaSheetsSupported": null,
+  "PagesPerMinute": 42,
+  "PagesPerMinuteColor": null,
+  "PrintScalingDefault": null,
+  "PrintScalingSupported": null,
+  "Sections": [
+    {
+      "Tag": 1,
+      "Attributes": [
+        {
+          "Tag": 71,
+          "Name": "attributes-charset",
+          "Value": "utf-8"
+        },
+        {
+          "Tag": 72,
+          "Name": "attributes-natural-language",
+          "Value": "en-us"
+        }
+      ]
+    },
+    {
+      "Tag": 4,
+      "Attributes": [
+        {
+          "Tag": 33,
+          "Name": "pages-per-minute",
+          "Value": 42
+        }
+      ]
+    }
+  ]
+}

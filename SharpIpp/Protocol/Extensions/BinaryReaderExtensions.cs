@@ -2,7 +2,7 @@
 
 namespace SharpIpp.Protocol.Extensions
 {
-    public static class BinaryReaderExtensions
+    internal static class BinaryReaderExtensions
     {
         public static short ReadInt16BigEndian(this BinaryReader reader) => Bytes.Reverse(reader.ReadInt16());
 

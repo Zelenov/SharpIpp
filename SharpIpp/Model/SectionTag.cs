@@ -33,6 +33,6 @@
         /// <summary>
         ///     unsupported-attributes-tag
         /// </summary>
-        UnsupportedAttributesTag = 0x05,
+        UnsupportedAttributesTag = 0x05
     }
 }

@@ -2,9 +2,10 @@
 
 namespace SharpIpp.Model
 {
-    public class PrintJobResponse
+    public class PrintJobResponse : IIppJobResponse
     {
-        public IppVersion IppVersion { get; set; } = IppVersion.V11;
+        public IppVersion Version { get; set; } = IppVersion.V11;
+        public IppStatusCode StatusCode { get; set; }
         public int RequestId { get; set; } = 1;
 
         /// <summary>
@@ -37,6 +38,6 @@ namespace SharpIpp.Model
         /// </summary>
         public int? NumberOfInterveningJobs { get; set; }
 
-        public IDictionary<string, IppAttribute[]> AllAttributes { get; set; } = null!;
+        public List<IppSection> Sections { get; } = new List<IppSection>();
     }
 }

@@ -7,6 +7,6 @@
         AutoFit,
         Fill,
         Fit,
-        None,
+        None
     }
 }

@@ -12,11 +12,39 @@ using SharpIpp.Protocol.Extensions;
 
 namespace SharpIpp.Protocol
 {
-    internal partial class IppProtocol
+    internal partial class IppProtocol : IIppProtocol
     {
-        private IppResponse ReadStream(Stream stream)
+        private IppRequestMessage ConstructIppRequest<T>(T request)
         {
-            var res = new IppResponse();
+            if (request == null)
+                throw new ArgumentException($"{nameof(request)}");
+
+            var ippRequest = Mapper.Map<T, IppRequestMessage>(request);
+            return ippRequest;
+        }
+
+        public void Write(IppRequestMessage ippRequestMessage, Stream stream)
+        {
+            if (ippRequestMessage == null)
+                throw new ArgumentException($"{nameof(ippRequestMessage)}");
+            if (stream == null)
+                throw new ArgumentException($"{nameof(stream)}");
+
+            using var writer = new BinaryWriter(stream, Encoding.ASCII, true);
+            Write(ippRequestMessage, writer);
+            if (ippRequestMessage.Document != null)
+                ippRequestMessage.Document.CopyTo(stream);
+        }
+
+        public T Construct<T>(IIppResponseMessage ippResponse) where T : IIppResponseMessage
+        {
+            var r = Mapper.Map<T>(ippResponse);
+            return r;
+        }
+
+        public IppResponseMessage ReadIppResponse(Stream stream)
+        {
+            var res = new IppResponseMessage();
             try
             {
                 using var reader = new BinaryReader(stream, Encoding.ASCII, true);
@@ -33,14 +61,14 @@ namespace SharpIpp.Protocol
             }
         }
 
-        private void ReadSection(BinaryReader reader, IppResponse res)
+        private void ReadSection(BinaryReader reader, IppResponseMessage res)
         {
             IppAttribute? prevAttribute = null;
             List<IppAttribute>? attributes = null;
             do
             {
                 var data = reader.ReadByte();
-                var sectionTag = (SectionTag)data;
+                var sectionTag = (SectionTag) data;
                 switch (sectionTag)
                 {
                     //https://tools.ietf.org/html/rfc8010#section-3.5.1
@@ -50,17 +78,19 @@ namespace SharpIpp.Protocol
                     case SectionTag.JobAttributesTag:
                     case SectionTag.PrinterAttributesTag:
                     case SectionTag.UnsupportedAttributesTag:
-                        var section = new IppSection{Tag = sectionTag};
+                        var section = new IppSection {Tag = sectionTag};
                         res.Sections.Add(section);
                         attributes = section.Attributes;
                         break;
                     default:
                         var attribute = ReadAttribute((Tag) data, reader, prevAttribute);
                         prevAttribute = attribute;
-                        if (attributes==null)
-                            throw new ArgumentException($"Section start tag not found in stream. Expected < 0x06. Actual: {data}");
+                        if (attributes == null)
+                            throw new ArgumentException(
+                                $"Section start tag not found in stream. Expected < 0x06. Actual: {data}");
+
                         attributes.Add(attribute);
-                      
+
                         break;
                 }
             } while (true);
@@ -222,19 +252,19 @@ namespace SharpIpp.Protocol
             return attribute;
         }
 
-        public void Write(IppRequest request, BinaryWriter writer)
+        public void Write(IppRequestMessage requestMessage, BinaryWriter writer)
         {
-            writer.WriteBigEndian((short) request.IppVersion);
-            writer.WriteBigEndian((short) request.IppOperation);
-            writer.WriteBigEndian(request.RequestId);
+            writer.WriteBigEndian((short) requestMessage.Version);
+            writer.WriteBigEndian((short) requestMessage.IppOperation);
+            writer.WriteBigEndian(requestMessage.RequestId);
 
             //operation-attributes-tag https://tools.ietf.org/html/rfc8010#section-3.5.1
-            var attributes = request.OperationAttributes.Select(x => (SectionTag.OperationAttributesTag, x))
-               .Concat(request.JobAttributes.Select(x => (SectionTag.JobAttributesTag, x)))
+            var attributes = requestMessage.OperationAttributes.Select(x => (SectionTag.OperationAttributesTag, x))
+               .Concat(requestMessage.JobAttributes.Select(x => (SectionTag.JobAttributesTag, x)))
                .ToArray();
             if (!attributes.Any())
                 return;
-            
+
             IppAttribute? prevAttribute = null;
             SectionTag? prevTag = null;
             foreach (var (ippTag, ippAttribute) in attributes)
@@ -249,7 +279,7 @@ namespace SharpIpp.Protocol
             }
 
             //end-of-attributes-tag https://tools.ietf.org/html/rfc8010#section-3.5.1
-            writer.Write((byte)SectionTag.EndOfAttributesTag);
+            writer.Write((byte) SectionTag.EndOfAttributesTag);
         }
     }
 }

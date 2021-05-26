@@ -2,10 +2,12 @@
 
 namespace SharpIpp.Model
 {
-    public class GetJobsResponse
+    public class GetJobsResponse : IIppResponseMessage
     {
-        public IppVersion IppVersion { get; set; } = IppVersion.V11;
+        public JobAttributes[] Jobs { get; set; } = null!;
+        public IppVersion Version { get; set; } = IppVersion.V11;
+        public IppStatusCode StatusCode { get; set; }
         public int RequestId { get; set; } = 1;
-        public IDictionary<string, IppAttribute[]> AllAttributes { get; set; } = null!;
+        public List<IppSection> Sections { get; } = new List<IppSection>();
     }
 }

@@ -18,15 +18,16 @@ namespace SharpIpp.Protocol
             Mapper.CreateIppMap<Resolution>();
             Mapper.CreateIppMap<StringWithLanguage>();
 
-
-            Mapper.CreateIppMap<int, IppOperation>((src, map) => (IppOperation)(short)src);
-            Mapper.CreateIppMap<int, Finishings>((src, map) => (Finishings)src);
-            Mapper.CreateIppMap<int, IppStatusCode>((src, map) => (IppStatusCode)src);
-            Mapper.CreateIppMap<int, JobState>((src, map) => (JobState)src);
-            Mapper.CreateIppMap<int, Orientation>((src, map) => (Orientation)src);
-            Mapper.CreateIppMap<int, PrinterState>((src, map) => (PrinterState)src);
-            Mapper.CreateIppMap<int, PrintQuality>((src, map) => (PrintQuality)src);
-            Mapper.CreateIppMap<int, ResolutionUnit>((src, map) => (ResolutionUnit)src);
+            var unixStartTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified);
+            Mapper.CreateIppMap<int, DateTime>((src, map) => unixStartTime.AddSeconds(src));
+            Mapper.CreateIppMap<int, IppOperation>((src, map) => (IppOperation) (short) src);
+            Mapper.CreateIppMap<int, Finishings>((src, map) => (Finishings) src);
+            Mapper.CreateIppMap<int, IppStatusCode>((src, map) => (IppStatusCode) src);
+            Mapper.CreateIppMap<int, JobState>((src, map) => (JobState) src);
+            Mapper.CreateIppMap<int, Orientation>((src, map) => (Orientation) src);
+            Mapper.CreateIppMap<int, PrinterState>((src, map) => (PrinterState) src);
+            Mapper.CreateIppMap<int, PrintQuality>((src, map) => (PrintQuality) src);
+            Mapper.CreateIppMap<int, ResolutionUnit>((src, map) => (ResolutionUnit) src);
 
             //All name parameters can come as StringWithLanguage or string
             //Mappers for string\language mapping 
@@ -40,10 +41,32 @@ namespace SharpIpp.Protocol
             ConfigureJobSheets(Mapper);
             ConfigureCompression(Mapper);
             ConfigurePrintScaling(Mapper);
+            ConfigureWhichJobs(Mapper);
+
+            ConfigureNewJobAttributes(Mapper);
+            ConfigureDocumentAttributes(Mapper);
+            ConfigureIIppPrinterRequest(Mapper);
+            ConfigureIIppJobRequest(Mapper);
+            ConfigureIIppRequest(Mapper);
+            ConfigureIIppJobResponse(Mapper);
+            ConfigureIIppResponse(Mapper);
+
             ConfigurePrintJobRequest(Mapper);
             ConfigureGetPrinterAttributesResponse(Mapper);
             ConfigureGetJobAttributesResponse(Mapper);
             ConfigureGetJobsResponse(Mapper);
+            ConfigurePrintUriRequest(Mapper);
+            ConfigureCreateJobRequest(Mapper);
+            ConfigureValidateJobRequest(Mapper);
+            ConfigureSendDocumentRequest(Mapper);
+            ConfigureSendUriRequest(Mapper);
+            ConfigurePausePrinterRequest(Mapper);
+            ConfigureResumePrinterRequest(Mapper);
+            ConfigurePurgeJobsRequest(Mapper);
+            ConfigureCancelJobRequest(Mapper);
+            ConfigureHoldJobRequest(Mapper);
+            ConfigureReleaseJobRequest(Mapper);
+            ConfigureRestartJobRequest(Mapper);
         }
 
         private static void ConfigureJobHoldUntil(SimpleMapper map)
@@ -80,8 +103,7 @@ namespace SharpIpp.Protocol
             map.CreateIppMap<string, MultipleDocumentHandling>((src, ctx) => src switch
             {
                 "single-document" => MultipleDocumentHandling.SingleDocument,
-                "separate-documents-uncollated-copies" =>
-                MultipleDocumentHandling.SeparateDocumentsUncollatedCopies,
+                "separate-documents-uncollated-copies" => MultipleDocumentHandling.SeparateDocumentsUncollatedCopies,
                 "separate-documents-collated-copies" => MultipleDocumentHandling.SeparateDocumentsCollatedCopies,
                 "single-document-new-sheet" => MultipleDocumentHandling.SingleDocumentNewSheet,
                 _ => MultipleDocumentHandling.Unsupported
@@ -90,8 +112,7 @@ namespace SharpIpp.Protocol
             map.CreateMap<MultipleDocumentHandling, string>((src, ctx) => src switch
             {
                 MultipleDocumentHandling.SingleDocument => "single-document",
-                MultipleDocumentHandling.SeparateDocumentsUncollatedCopies =>
-                "separate-documents-uncollated-copies",
+                MultipleDocumentHandling.SeparateDocumentsUncollatedCopies => "separate-documents-uncollated-copies",
                 MultipleDocumentHandling.SeparateDocumentsCollatedCopies => "separate-documents-collated-copies",
                 MultipleDocumentHandling.SingleDocumentNewSheet => "single-document-new-sheet",
                 _ => "unsupported"
@@ -152,18 +173,18 @@ namespace SharpIpp.Protocol
                 _ => "unsupported"
             });
         }
+
         private static void ConfigurePrintScaling(SimpleMapper map)
         {
-            map.CreateIppMap<string, PrintScaling>((src, ctx) =>
-                    src switch
-                    {
-                        "auto" => PrintScaling.Auto,
-                        "auto-fit" => PrintScaling.AutoFit,
-                        "fill" => PrintScaling.Fill,
-                        "fit" => PrintScaling.Fit,
-                        "none" => PrintScaling.None,
-                        _ => PrintScaling.Unsupported
-                    });
+            map.CreateIppMap<string, PrintScaling>((src, ctx) => src switch
+            {
+                "auto" => PrintScaling.Auto,
+                "auto-fit" => PrintScaling.AutoFit,
+                "fill" => PrintScaling.Fill,
+                "fit" => PrintScaling.Fit,
+                "none" => PrintScaling.None,
+                _ => PrintScaling.Unsupported
+            });
 
             map.CreateMap<PrintScaling, string>((src, ctx) => src switch
             {
@@ -172,6 +193,23 @@ namespace SharpIpp.Protocol
                 PrintScaling.Fill => "fill",
                 PrintScaling.Fit => "fit",
                 PrintScaling.None => "None",
+                _ => "unsupported"
+            });
+        }
+
+        private static void ConfigureWhichJobs(SimpleMapper map)
+        {
+            map.CreateIppMap<string, WhichJobs>((src, ctx) => src switch
+            {
+                "completed" => WhichJobs.Completed,
+                "not-completed" => WhichJobs.NotCompleted,
+                _ => WhichJobs.Unsupported
+            });
+
+            map.CreateMap<WhichJobs, string>((src, ctx) => src switch
+            {
+                WhichJobs.Completed => "completed",
+                WhichJobs.NotCompleted => "not-completed",
                 _ => "unsupported"
             });
         }

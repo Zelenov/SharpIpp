@@ -7,30 +7,30 @@ namespace SharpIpp.Exceptions
     [Serializable]
     public class IppResponseException : Exception
     {
-        public IppResponseException(IppResponse response)
+        public IppResponseException(IppResponseMessage responseMessage)
         {
-            Response = response;
+            ResponseMessage = responseMessage;
         }
 
-        protected IppResponseException(SerializationInfo info, StreamingContext context, IppResponse response) : base(
-            info, context)
+        protected IppResponseException(SerializationInfo info, StreamingContext context,
+            IppResponseMessage responseMessage) : base(info, context)
         {
-            Response = response;
+            ResponseMessage = responseMessage;
         }
 
-        public IppResponseException(string message, IppResponse response) : base(message)
+        public IppResponseException(string message, IppResponseMessage responseMessage) : base(message)
         {
-            Response = response;
+            ResponseMessage = responseMessage;
         }
 
-        public IppResponseException(string message, Exception innerException, IppResponse response) : base(message,
-            innerException)
+        public IppResponseException(string message, Exception innerException, IppResponseMessage responseMessage) :
+            base(message, innerException)
         {
-            Response = response;
+            ResponseMessage = responseMessage;
         }
 
-        public IppResponse Response { get; set; }
+        public IppResponseMessage ResponseMessage { get; set; }
 
-        public override string ToString() => $"{base.ToString()}\n{nameof(Response)}: {Response}";
+        public override string ToString() => $"{base.ToString()}\n{nameof(ResponseMessage)}: {ResponseMessage}";
     }
 }

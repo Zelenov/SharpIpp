@@ -11,7 +11,7 @@ namespace SharpIpp.Protocol
         private static readonly byte Plus = Encoding.ASCII.GetBytes("+")[0];
         private static readonly byte Minus = Encoding.ASCII.GetBytes("-")[0];
 
-        public void Write(NoValue value, BinaryWriter stream)
+        public void Write(NoValue _, BinaryWriter stream)
         {
             stream.WriteBigEndian((short) 0);
         }
@@ -160,7 +160,7 @@ namespace SharpIpp.Protocol
 
         public StringWithLanguage ReadStringWithLanguage(BinaryReader stream)
         {
-            var length = stream.ReadInt16BigEndian();
+            var _ = stream.ReadInt16BigEndian();
             var language = ReadString(stream);
             var value = ReadString(stream);
             return new StringWithLanguage(language, value);

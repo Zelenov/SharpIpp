@@ -1,4 +1,5 @@
 ﻿using System;
+// ReSharper disable ConditionIsAlwaysTrueOrFalse
 
 namespace SharpIpp.Model
 {
@@ -67,7 +68,7 @@ namespace SharpIpp.Model
 
         public bool Equals(IppAttribute other)
         {
-            if (ReferenceEquals(null, other))
+            if (null == other)
                 return false;
             if (ReferenceEquals(this, other))
                 return true;
@@ -79,7 +80,7 @@ namespace SharpIpp.Model
 
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj))
+            if (null == obj)
                 return false;
             if (ReferenceEquals(this, obj))
                 return true;

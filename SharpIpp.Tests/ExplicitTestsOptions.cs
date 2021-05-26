@@ -1,9 +1,10 @@
+using System;
+
 namespace SharpIpp.Tests
 {
     internal class ExplicitTestsOptions
     {
-        public string PrinterUrl { get; set; }
-        public int JobId { get; set; }
-        public string JobUrl { get; set; }
+        public Uri PrinterUrl { get; set; }
+        public Uri DocumentUri { get; set; }
     }
 }
