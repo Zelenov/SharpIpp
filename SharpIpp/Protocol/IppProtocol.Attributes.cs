@@ -28,7 +28,7 @@ namespace SharpIpp.Protocol
         public void Write(bool value, BinaryWriter stream)
         {
             stream.WriteBigEndian((short) 1);
-            stream.Write(value ? 0x01 : 0x00);
+            stream.Write(value ? (byte) 0x01 : (byte) 0x00);
         }
 
         public bool ReadBool(BinaryReader stream)
