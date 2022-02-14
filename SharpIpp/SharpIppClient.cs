@@ -49,8 +49,11 @@ namespace SharpIpp
         }
 
         /// <summary>
-        ///     Print-Job Operation
-        ///     https://tools.ietf.org/html/rfc2911#section-3.2.1
+        /// This REQUIRED operation allows a client to submit a print job with
+        /// only one document and supply the document data (rather than just a
+        /// reference to the data).  
+        /// Print-Job Operation
+        /// https://tools.ietf.org/html/rfc2911#section-3.2.1
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
@@ -61,6 +64,17 @@ namespace SharpIpp
         }
 
         /// <summary>
+        /// This OPTIONAL operation is identical to the Print-Job operation
+        /// <see cref="PrintJobAsync"/> except that a client supplies a URI reference to the
+        /// document data using the "document-uri" (uri) operation attribute
+        /// rather than including the document data itself.  Before
+        /// returning the response, the Printer MUST validate that the Printer
+        /// supports the retrieval method (e.g., http, ftp, etc.) implied by the
+        /// URI, and MUST check for valid URI syntax.  If the client-supplied URI
+        /// scheme is not supported, i.e. the value is not in the Printer
+        /// object's "referenced-uri-scheme-supported" attribute, the Printer
+        /// object MUST reject the request and return the 'client-error-uri-
+        /// scheme-not-supported' status code.
         ///     Print-Uri Operation
         ///     https://tools.ietf.org/html/rfc2911#section-3.2.2
         /// </summary>
@@ -73,6 +87,27 @@ namespace SharpIpp
         }
 
         /// <summary>
+        /// This REQUIRED operation is similar to the Print-Job operation
+        /// <see cref="PrintJobAsync"/> except that a client supplies no document data and
+        /// the Printer allocates no resources (i.e., it does not create a new
+        /// Job object).  This operation is used only to verify capabilities of a
+        /// printer object against whatever attributes are supplied by the client
+        /// in the Validate-Job request.  By using the Validate-Job operation a
+        /// client can validate that an identical Print-Job operation (with the
+        /// document data) would be accepted. The Validate-Job operation also
+        /// performs the same security negotiation as the Print-Job operation,
+        /// so that a client can check that the client and
+        /// Printer object security requirements can be met before performing a
+        /// Print-Job operation.
+        /// The Validate-Job operation does not accept a "document-uri" attribute
+        /// in order to allow a client to check that the same Print-URI operation
+        /// will be accepted, since the client doesn't send the data with the
+        /// Print-URI operation.  The client SHOULD just issue the Print-URI
+        /// request.
+        /// The Printer object returns the same status codes, Operation
+        /// Attributes (Group 1) and Unsupported Attributes (Group 2) as the
+        /// Print-Job operation.  However, no Job Object Attributes (Group 3) are
+        /// returned, since no Job object is created.
         ///     Validate-Job Operation
         ///     https://tools.ietf.org/html/rfc2911#section-3.2.3
         /// </summary>
@@ -85,6 +120,40 @@ namespace SharpIpp
         }
 
         /// <summary>
+        /// This OPTIONAL operation is similar to the Print-Job operation
+        /// (<see cref="PrintJobAsync"/>) except that in the Create-Job request, a client does
+        /// not supply document data or any reference to document data.  Also,
+        /// the client does not supply any of the "document-name", "document-
+        /// format", "compression", or "document-natural-language" operation
+        /// attributes.  This operation is followed by one or more Send-Document
+        /// or Send-URI operations.  In each of those operation requests, the
+        /// client OPTIONALLY supplies the "document-name", "document-format",
+        /// and "document-natural-language" attributes for each document in the
+        /// multi-document Job object.
+        /// If a Printer object supports the Create-Job operation, it MUST also
+        /// support the Send-Document operation and also MAY support the Send-URI
+        /// operation.
+        /// If the Printer object supports this operation, it MUST support the
+        /// "multiple-operation-time-out" Printer attribute (<see cref="NewJobAttributes."/>).
+        /// If the Printer object supports this operation, then it MUST support
+        /// the "multiple-document-jobs-supported" Printer Description attribute
+        /// (see section 4.4.16) and indicate whether or not it supports
+        /// multiple-document jobs.
+        /// If the Printer object supports this operation and supports multiple
+        /// documents in a job, then it MUST support the "multiple-document-
+        /// handling" Job Template job attribute with at least one value (see
+        /// section 4.2.4) and the associated "multiple-document-handling-
+        /// default" and "multiple-document-handling-supported" Job Template
+        /// Printer attributes (<see cref="JobAttributes.MultipleDocumentHandling"/>).
+        /// After the Create-Job operation has completed, the value of the "job-
+        /// state" attribute is similar to the "job-state" after a Print-Job,
+        /// even though no document-data has arrived.  A Printer MAY set the
+        /// 'job-data-insufficient' value of the job's "job-state-reason"
+        /// attribute to indicate that processing cannot begin until sufficient
+        /// data has arrived and set the "job-state" to either 'pending' or
+        /// 'pending-held'.  A non-spooling printer that doesn't implement the
+        /// 'pending' job state may even set the "job-state" to 'processing',
+        /// even though there is not yet any data to process. 
         ///     Create-Job Operation
         ///     https://tools.ietf.org/html/rfc2911#section-3.2.4
         /// </summary>
@@ -251,7 +320,7 @@ namespace SharpIpp
             return await SendAsync(printerUri, () => request, ippResponse => ippResponse);
         }
 
-        private async Task<T> SendAsync<T>(Uri printer, Func<IppRequestMessage> constructRequestFunc,
+        protected async Task<T> SendAsync<T>(Uri printer, Func<IppRequestMessage> constructRequestFunc,
             Func<IppResponseMessage, T> constructResponseFunc) where T : class
         {
             var httpPrinter = new UriBuilder(printer) {Scheme = "http", Port = printer.Port}.Uri;

@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
@@ -209,6 +210,10 @@ namespace SharpIpp.Tests
                     PrinterResolution = new Resolution(600, 600, ResolutionUnit.DotsPerInch),
                     PrintQuality = PrintQuality.Normal,
                     PrintScaling = PrintScaling.Fit
+                },
+                AdditionalJobAttributes = new IppAttribute[]
+                {
+                    new IppAttribute(Tag.Keyword, "print-color-mode", "monochrome")
                 }
             };
             await TestRequestAsync(request, (client, r) => client.PrintUriAsync(r));
@@ -228,7 +233,11 @@ namespace SharpIpp.Tests
         public async Task GetPrinterAttributesAsync_Simple()
         {
             var request = new GetPrinterAttributesRequest {PrinterUri = Options.Value.PrinterUrl};
-            await TestRequestAsync(request, (client, r) => client.GetPrinterAttributesAsync(r));
+            var res = await TestRequestAsync(request, (client, r) => client.GetPrinterAttributesAsync(r));
+            var supported = res.Sections.FirstOrDefault(s=>s.Tag==SectionTag.PrinterAttributesTag)
+               ?.Attributes.Where(a => a.Name == "print-color-mode-supported")
+               .Select(a => a.Value.ToString())
+               .ToArray() ?? new string?[0];
         }
 
         [Test]
@@ -239,6 +248,12 @@ namespace SharpIpp.Tests
                 var request = new GetJobAttributesRequest {PrinterUri = Options.Value.PrinterUrl, JobId = jobId};
                 return await TestRequestAsync(request, (client, r) => client.GetJobAttributesAsync(r));
             });
+        }
+        [Test]
+        public async Task GetJobAttributesAsync82()
+        {
+                var request = new GetJobAttributesRequest {PrinterUri = Options.Value.PrinterUrl, JobId = 82};
+                await TestRequestAsync(request, (client, r) => client.GetJobAttributesAsync(r));
         }
 
         [Test]
