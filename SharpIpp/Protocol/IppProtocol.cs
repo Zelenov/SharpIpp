@@ -281,5 +281,6 @@ namespace SharpIpp.Protocol
             //end-of-attributes-tag https://tools.ietf.org/html/rfc8010#section-3.5.1
             writer.Write((byte) SectionTag.EndOfAttributesTag);
         }
+
     }
 }

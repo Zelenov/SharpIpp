@@ -55,6 +55,7 @@ namespace SharpIpp.Protocol
             ConfigureGetPrinterAttributesResponse(Mapper);
             ConfigureGetJobAttributesResponse(Mapper);
             ConfigureGetJobsResponse(Mapper);
+            ConfigureGetCUPSPrintersResponse(Mapper);
             ConfigurePrintUriRequest(Mapper);
             ConfigureCreateJobRequest(Mapper);
             ConfigureValidateJobRequest(Mapper);
