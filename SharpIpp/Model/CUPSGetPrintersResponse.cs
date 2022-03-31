@@ -2,7 +2,7 @@
 
 namespace SharpIpp.Model
 {
-    public class GetCUPSPrintersResponse : IIppResponseMessage
+    public class CUPSGetPrintersResponse : IIppResponseMessage
     {
         public JobAttributes[] Jobs { get; set; } = null!;
         public IppVersion Version { get; set; } = IppVersion.CUPS10;

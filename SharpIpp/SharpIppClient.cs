@@ -309,11 +309,18 @@ namespace SharpIpp
                 ippResponse => _ippProtocol.ConstructGetJobsResponse(ippResponse));
         }
 
-        public async Task<GetCUPSPrintersResponse> GetCUPSPrintersAsync(GetCUPSPrintersRequest request)
+        /// <summary>
+        ///     CUPS Get-Printers Operation
+        ///     http://www.cups.org/doc/spec-ipp.html
+        /// </summary>
+        /// <param name="request">The CUPSGetPrintersRequest object</param>
+        /// <returns></returns>
+        public async Task<CUPSGetPrintersResponse> GetCUPSPrintersAsync(CUPSGetPrintersRequest request)
         {
             return await SendAsync(request.PrinterUri, () => _ippProtocol.Construct(request),
                 ippResponse => _ippProtocol.ConstructGetCUPSPrintersResponse(ippResponse));
         }
+
         /// <summary>
         ///     Custom Operation, not defined in the standard
         /// </summary>

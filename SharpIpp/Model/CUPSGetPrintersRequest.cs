@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace SharpIpp.Model
 {
-    public class GetCUPSPrintersRequest : IIppPrinterRequest
+    public class CUPSGetPrintersRequest : IIppPrinterRequest
     {
         /// The client OPTIONALLY supplies this attribute to select the 
         /// first printer that is returned. 

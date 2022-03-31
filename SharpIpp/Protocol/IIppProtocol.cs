@@ -15,8 +15,8 @@ namespace SharpIpp.Protocol
         GetJobAttributesResponse ConstructGetJobAttributesResponse(IIppResponseMessage ippResponse);
         IppRequestMessage Construct(GetJobsRequest request);
         GetJobsResponse ConstructGetJobsResponse(IIppResponseMessage ippResponse);
-        IppRequestMessage Construct(GetCUPSPrintersRequest request);
-        GetCUPSPrintersResponse ConstructGetCUPSPrintersResponse(IIppResponseMessage ippResponse);
+        IppRequestMessage Construct(CUPSGetPrintersRequest request);
+        CUPSGetPrintersResponse ConstructGetCUPSPrintersResponse(IIppResponseMessage ippResponse);
         IppRequestMessage Construct(GetPrinterAttributesRequest request);
         GetPrinterAttributesResponse ConstructGetPrinterAttributesResponse(IIppResponseMessage ippResponse);
         IppRequestMessage Construct(HoldJobRequest request);

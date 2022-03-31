@@ -12,18 +12,18 @@ namespace SharpIpp.Protocol
         ///     https://tools.ietf.org/html/rfc2911#section-3.3.4.1
         /// </summary>
         /// <param name="request"></param>
-        public IppRequestMessage Construct(GetCUPSPrintersRequest request) => ConstructIppRequest(request);
+        public IppRequestMessage Construct(CUPSGetPrintersRequest request) => ConstructIppRequest(request);
 
         /// <summary>
         ///     Get-Job-Attributes Response
         ///     https://tools.ietf.org/html/rfc2911#section-3.3.4.2
         /// </summary>
-        public GetCUPSPrintersResponse ConstructGetCUPSPrintersResponse(IIppResponseMessage ippResponse) =>
-            Construct<GetCUPSPrintersResponse>(ippResponse);
+        public CUPSGetPrintersResponse ConstructGetCUPSPrintersResponse(IIppResponseMessage ippResponse) =>
+            Construct<CUPSGetPrintersResponse>(ippResponse);
 
         private static void ConfigureGetCUPSPrintersResponse(SimpleMapper mapper)
         {
-            mapper.CreateMap<GetCUPSPrintersRequest, IppRequestMessage>((src, map) =>
+            mapper.CreateMap<CUPSGetPrintersRequest, IppRequestMessage>((src, map) =>
             {
                 var dst = new IppRequestMessage {IppOperation = IppOperation.GetCUPSPrinters};
                 mapper.Map<IIppPrinterRequest, IppRequestMessage>(src, dst);
@@ -44,9 +44,9 @@ namespace SharpIpp.Protocol
                 dst.JobAttributes.Populate(src.AdditionalJobAttributes);
                 return dst;
             });
-            mapper.CreateMap<IppResponseMessage, GetCUPSPrintersResponse>((src, map) =>
+            mapper.CreateMap<IppResponseMessage, CUPSGetPrintersResponse>((src, map) =>
             {
-                var dst = new GetCUPSPrintersResponse { Jobs = map.Map<List<IppSection>, JobAttributes[]>(src.Sections)};
+                var dst = new CUPSGetPrintersResponse { Jobs = map.Map<List<IppSection>, JobAttributes[]>(src.Sections)};
                 map.Map<IppResponseMessage, IIppResponseMessage>(src, dst);
                 return dst;
             });
