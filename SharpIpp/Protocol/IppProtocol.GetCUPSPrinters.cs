@@ -8,15 +8,15 @@ namespace SharpIpp.Protocol
     internal partial class IppProtocol
     {
         /// <summary>
-        ///     Get-Job-Attributes Request
-        ///     https://tools.ietf.org/html/rfc2911#section-3.3.4.1
+        ///     CUPS-get-printers Request
+        ///     http://www.cups.org/doc/spec-ipp.html#CUPS_GET_PRINTERS
         /// </summary>
         /// <param name="request"></param>
         public IppRequestMessage Construct(CUPSGetPrintersRequest request) => ConstructIppRequest(request);
 
         /// <summary>
-        ///     Get-Job-Attributes Response
-        ///     https://tools.ietf.org/html/rfc2911#section-3.3.4.2
+        ///     CUPS-get-printers Response
+        ///     http://www.cups.org/doc/spec-ipp.html#CUPS_GET_PRINTERS
         /// </summary>
         public CUPSGetPrintersResponse ConstructGetCUPSPrintersResponse(IIppResponseMessage ippResponse) =>
             Construct<CUPSGetPrintersResponse>(ippResponse);
@@ -31,11 +31,11 @@ namespace SharpIpp.Protocol
                 if (src.Limit != null)
                     operation.Add(new IppAttribute(Tag.Integer, "requesting-user-name", src.Limit.Value));
                 if (src.FirstPrinterName != null)
-                    operation.Add(new IppAttribute(Tag.Keyword, "first-printer-name", Mapper.Map<string>(src.FirstPrinterName)));
+                    operation.Add(new IppAttribute(Tag.Keyword, "first-printer-name", mapper.Map<string>(src.FirstPrinterName)));
                 if (src.PrinterID != null)
-                    operation.Add(new IppAttribute(Tag.Integer, "printer-id", Mapper.Map<string>(src.PrinterID)));
+                    operation.Add(new IppAttribute(Tag.Integer, "printer-id", mapper.Map<string>(src.PrinterID)));
                 if (src.PrinterLocation != null)
-                    operation.Add(new IppAttribute(Tag.Keyword, "printer-location", Mapper.Map<string>(src.PrinterLocation)));
+                    operation.Add(new IppAttribute(Tag.Keyword, "printer-location", mapper.Map<string>(src.PrinterLocation)));
                 if (src.RequestedAttributes != null)
                     operation.AddRange(src.RequestedAttributes.Select(requestedAttribute =>
                         new IppAttribute(Tag.Keyword, "requested-attributes", requestedAttribute)));

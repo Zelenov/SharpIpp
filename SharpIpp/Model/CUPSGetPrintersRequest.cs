@@ -3,12 +3,19 @@ using System.Collections.Generic;
 
 namespace SharpIpp.Model
 {
+    /// <summary>
+    /// Request to get a list of printers from a CUPS IPP server
+    /// <seealso href="http://www.cups.org/doc/spec-ipp.html#CUPS_GET_PRINTERS"/>
+    /// </summary>
     public class CUPSGetPrintersRequest : IIppPrinterRequest
     {
+        ///<summary>
         /// The client OPTIONALLY supplies this attribute to select the 
         /// first printer that is returned. 
+        /// </summary>
         public string? FirstPrinterName { get; set; }
 
+        ///<summary>
         /// The client OPTIONALLY supplies this attribute.  The Printer
         /// object MUST support this attribute. It is an integer value that
         /// determines the maximum number of jobs that a client will
@@ -19,20 +26,27 @@ namespace SharpIpp.Model
         /// There is no mechanism to allow for the next 'M' jobs after the
         /// first 'N' jobs.  If the client does not supply this attribute,
         /// the Printer object responds with all applicable jobs.
+        ///</summary>
         public int? Limit { get; set; }
 
-
+        ///<summary>
         ///The client OPTIONALLY supplies this attribute to select which printer is returned.
+        ///</summary>
         public int? PrinterID { get; set; }
 
+        ///<summary>
         ///The client OPTIONALLY supplies this attribute to select which printers are returned.
+        ///</summary>
         public string? PrinterLocation { get; set; }
 
-
+        ///<summary>
         ///The client OPTIONALLY supplies a printer type enumeration to select which printers are returned.
+        ///</summary>
         public PrinterType? PrinterType { get; set; }
 
+        ///<summary>
         ///The client OPTIONALLY supplies a printer type mask enumeration to select which bits are used in the "printer-type" attribute.
+        ///</summary>
         public PrinterType? PrinterTypeMask { get; set; }
 
         /// <summary>
@@ -63,6 +77,13 @@ namespace SharpIpp.Model
         public IEnumerable<IppAttribute>? AdditionalJobAttributes { get; set; }
     }
 
+    ///<summary>
+    ///The type of printer returned.
+    ///</summary>
+    ///<remarks>
+    ///Cups documentation says its an enum, but fails to mention possible values
+    ///<seealso href="http://www.cups.org/doc/spec-ipp.html#CUPS_GET_PRINTERS"/>
+    ///</remarks>
     public enum PrinterType
     {
         Printer
