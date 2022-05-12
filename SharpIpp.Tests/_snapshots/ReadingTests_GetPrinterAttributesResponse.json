@@ -1,7 +1,4 @@
 {
-  "Version": 257,
-  "StatusCode": 0,
-  "RequestId": 1,
   "PrinterUriSupported": [
     "ipp://10.30.254.250:631/ipp/print",
     "ipps://10.30.254.250:443/ipp/print"
@@ -67,7 +64,7 @@
     "application/postscript",
     "text/plain"
   ],
-  "PrinterIsAcceptingJobs": false,
+  "PrinterIsAcceptingJobs": true,
   "QueuedJobCount": 1,
   "PrinterMessageFromOperator": null,
   "ColorSupported": false,
@@ -99,6 +96,9 @@
     4,
     5
   ],
+  "Version": 257,
+  "StatusCode": 0,
+  "RequestId": 1,
   "Sections": [
     {
       "Tag": 1,
@@ -151,7 +151,7 @@
         {
           "Tag": 34,
           "Name": "job-ids-supported",
-          "Value": false
+          "Value": true
         },
         {
           "Tag": 66,
@@ -251,8 +251,7 @@
         {
           "Tag": 65,
           "Name": "printer-device-id",
-          "Value":
-            "MANUFACTURER:Lexmark;COMMAND SET:PCL 6 Emulation, PostScript Level 3 Emulation, PDF, URF, PWG, NPAP, PJL;MODEL:Lexmark MS420 Series;CLS:PRINTER;DES:Lexmark MS421dn;CID:LexmarkPrinterMonoA;COMMENT:ECP1.0, LV_043D, LP_0273, LF_00B3;"
+          "Value": "MANUFACTURER:Lexmark;COMMAND SET:PCL 6 Emulation, PostScript Level 3 Emulation, PDF, URF, PWG, NPAP, PJL;MODEL:Lexmark MS420 Series;CLS:PRINTER;DES:Lexmark MS421dn;CID:LexmarkPrinterMonoA;COMMENT:ECP1.0, LV_043D, LP_0273, LF_00B3;"
         },
         {
           "Tag": 65,
@@ -938,7 +937,7 @@
         {
           "Tag": 34,
           "Name": "job-pages-per-set-supported",
-          "Value": false
+          "Value": true
         },
         {
           "Tag": 33,
@@ -2644,7 +2643,7 @@
         {
           "Tag": 34,
           "Name": "page-ranges-supported",
-          "Value": false
+          "Value": true
         },
         {
           "Tag": 68,
@@ -2775,38 +2774,32 @@
         {
           "Tag": 48,
           "Name": "printer-input-tray",
-          "Value":
-            "name=auto;type=other;dimunit=micrometers;mediafeed=297000;mediaxfeed=210000;unit=sheets;maxcapacity=250;level=-3;status=0;"
+          "Value": "name=auto;type=other;dimunit=micrometers;mediafeed=297000;mediaxfeed=210000;unit=sheets;maxcapacity=250;level=-3;status=0;"
         },
         {
           "Tag": 48,
           "Name": "printer-input-tray",
-          "Value":
-            "name=alternate;type=sheetFeedManual;dimunit=micrometers;mediafeed=355600;mediaxfeed=215900;unit=sheets;maxcapacity=100;level=0;status=3;"
+          "Value": "name=alternate;type=sheetFeedManual;dimunit=micrometers;mediafeed=355600;mediaxfeed=215900;unit=sheets;maxcapacity=100;level=0;status=3;"
         },
         {
           "Tag": 48,
           "Name": "printer-input-tray",
-          "Value":
-            "name=envelope;type=sheetFeedManual;dimunit=micrometers;mediafeed=220000;mediaxfeed=110000;unit=sheets;maxcapacity=1;level=-2;status=0;"
+          "Value": "name=envelope;type=sheetFeedManual;dimunit=micrometers;mediafeed=220000;mediaxfeed=110000;unit=sheets;maxcapacity=1;level=-2;status=0;"
         },
         {
           "Tag": 48,
           "Name": "printer-input-tray",
-          "Value":
-            "name=manual;type=sheetFeedManual;dimunit=micrometers;mediafeed=297000;mediaxfeed=210000;unit=sheets;maxcapacity=1;level=-2;status=0;"
+          "Value": "name=manual;type=sheetFeedManual;dimunit=micrometers;mediafeed=297000;mediaxfeed=210000;unit=sheets;maxcapacity=1;level=-2;status=0;"
         },
         {
           "Tag": 48,
           "Name": "printer-input-tray",
-          "Value":
-            "name=tray-1;type=sheetFeedAutoNonRemovableTray;dimunit=micrometers;mediafeed=297000;mediaxfeed=210000;unit=sheets;maxcapacity=250;level=-3;status=0;"
+          "Value": "name=tray-1;type=sheetFeedAutoNonRemovableTray;dimunit=micrometers;mediafeed=297000;mediaxfeed=210000;unit=sheets;maxcapacity=250;level=-3;status=0;"
         },
         {
           "Tag": 48,
           "Name": "printer-output-tray",
-          "Value":
-            "name=face-down;type=unRemovableBin;unit=sheets;maxcapacity=150;remaining=-3;status=0;stackingorder=firstToLast;pagedelivery=faceDown;"
+          "Value": "name=face-down;type=unRemovableBin;unit=sheets;maxcapacity=150;remaining=-3;status=0;stackingorder=firstToLast;pagedelivery=faceDown;"
         },
         {
           "Tag": 49,
@@ -3243,7 +3236,7 @@
         {
           "Tag": 34,
           "Name": "printer-is-accepting-jobs",
-          "Value": false
+          "Value": true
         },
         {
           "Tag": 65,
@@ -3402,17 +3395,17 @@
         {
           "Tag": 34,
           "Name": "pdf-fit-to-page-supported",
-          "Value": false
+          "Value": true
         },
         {
           "Tag": 34,
           "Name": "pdf-fit-to-page-default",
-          "Value": false
+          "Value": true
         },
         {
           "Tag": 34,
           "Name": "pdf-fit-to-page",
-          "Value": false
+          "Value": true
         },
         {
           "Tag": 33,
@@ -3422,7 +3415,7 @@
         {
           "Tag": 34,
           "Name": "requesting-user-uri-supported",
-          "Value": false
+          "Value": true
         },
         {
           "Tag": 68,

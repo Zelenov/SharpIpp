@@ -42,7 +42,7 @@ namespace SharpIpp.Protocol
                 return false;
 
             if (value == 0x01)
-                return false;
+                return true;
 
             throw new ArgumentException($"boolean value {value} not supported");
         }

@@ -6,12 +6,11 @@ using SharpIpp.Model;
 using SharpIpp.Protocol;
 using SharpIpp.Tests.Extensions;
 using Snapper;
-using Snapper.Attributes;
 
 namespace SharpIpp.Tests
 {
     [TestFixture]
-    [UpdateSnapshots()]
+    //[Snapper.Attributes.UpdateSnapshots]
     public class ReadingTests
     {
         [OneTimeSetUp]

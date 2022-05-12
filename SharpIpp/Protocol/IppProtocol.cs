@@ -38,8 +38,15 @@ namespace SharpIpp.Protocol
 
         public T Construct<T>(IIppResponseMessage ippResponse) where T : IIppResponseMessage
         {
-            var r = Mapper.Map<T>(ippResponse);
-            return r;
+            try
+            {
+                var r = Mapper.Map<T>(ippResponse);
+                return r;
+            }
+            catch (Exception ex)
+            {
+                throw new IppResponseException("Ipp attributes mapping exception", ex, ippResponse);
+            }
         }
 
         public IppResponseMessage ReadIppResponse(Stream stream)
