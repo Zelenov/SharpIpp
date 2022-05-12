@@ -28,6 +28,7 @@ namespace SharpIpp.Protocol
             Mapper.CreateIppMap<int, PrinterState>((src, map) => (PrinterState) src);
             Mapper.CreateIppMap<int, PrintQuality>((src, map) => (PrintQuality) src);
             Mapper.CreateIppMap<int, ResolutionUnit>((src, map) => (ResolutionUnit) src);
+            Mapper.CreateIppMap<int, PrinterType>((src, map) => (PrinterType)src);
 
             //All name parameters can come as StringWithLanguage or string
             //Mappers for string\language mapping 
