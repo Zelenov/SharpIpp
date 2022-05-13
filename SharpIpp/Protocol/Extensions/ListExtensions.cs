@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
-using SharpIpp.Model;
+
+using SharpIpp.Protocol.Models;
 
 namespace SharpIpp.Protocol.Extensions
 {
@@ -8,7 +9,9 @@ namespace SharpIpp.Protocol.Extensions
         public static void Populate(this List<IppAttribute> list, IEnumerable<IppAttribute>? other)
         {
             if (other == null)
+            {
                 return;
+            }
 
             foreach (var additionalAttribute in other)
             {

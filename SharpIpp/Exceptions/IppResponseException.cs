@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Runtime.Serialization;
-using SharpIpp.Model;
+
+using SharpIpp.Protocol;
 
 namespace SharpIpp.Exceptions
 {
@@ -12,7 +13,9 @@ namespace SharpIpp.Exceptions
             ResponseMessage = responseMessage;
         }
 
-        protected IppResponseException(SerializationInfo info, StreamingContext context,
+        protected IppResponseException(
+            SerializationInfo info,
+            StreamingContext context,
             IIppResponseMessage responseMessage) : base(info, context)
         {
             ResponseMessage = responseMessage;
@@ -31,6 +34,9 @@ namespace SharpIpp.Exceptions
 
         public IIppResponseMessage ResponseMessage { get; set; }
 
-        public override string ToString() => $"{base.ToString()}\n{nameof(ResponseMessage)}: {ResponseMessage}";
+        public override string ToString()
+        {
+            return $"{base.ToString()}\n{nameof(ResponseMessage)}: {ResponseMessage}";
+        }
     }
 }

@@ -34,5 +34,6 @@
       "Value": "http://example.com/document.pdf"
     }
   ],
-  "JobAttributes": []
+  "JobAttributes": [],
+  "Document": null
 }

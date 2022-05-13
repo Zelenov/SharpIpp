@@ -24,5 +24,6 @@
       "Value": "pages-per-minute"
     }
   ],
-  "JobAttributes": []
+  "JobAttributes": [],
+  "Document": null
 }
