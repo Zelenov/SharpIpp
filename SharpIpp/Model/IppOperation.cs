@@ -23,6 +23,7 @@
         ReservedForAFutureOperation = 0x000F,
         PausePrinter = 0x0010,
         ResumePrinter = 0x0011,
-        PurgeJobs = 0x0012
+        PurgeJobs = 0x0012,
+        GetCUPSPrinters = 0x4002
     }
 }
