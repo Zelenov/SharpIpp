@@ -35,12 +35,38 @@ namespace SharpIpp.Mapping.Profiles
                 return dst;
             });
 
+            mapper.CreateMap<IIppRequestMessage, ValidateJobRequest>( ( src, map ) =>
+            {
+                // ReSharper disable once ConditionIsAlwaysTrueOrFalse
+                if ( src.Document == null )
+                {
+                    throw new ArgumentException( $"{nameof( src.Document )} must be set" );
+                }
+
+                var dst = new ValidateJobRequest
+                {
+                    NewJobAttributes = new NewJobAttributes(),
+                    DocumentAttributes = new DocumentAttributes()
+                };
+                map.Map<IIppRequestMessage, IIppPrinterRequest>( src, dst );
+                map.Map( src, dst.NewJobAttributes );
+                map.Map( src, dst.DocumentAttributes );
+                return dst;
+            } );
+
             mapper.CreateMap<IppResponseMessage, ValidateJobResponse>((src, map) =>
             {
                 var dst = new ValidateJobResponse();
                 map.Map<IppResponseMessage, IIppResponseMessage>(src, dst);
                 return dst;
             });
+
+            mapper.CreateMap<ValidateJobResponse, IppResponseMessage>( ( src, map ) =>
+            {
+                var dst = new IppResponseMessage();
+                map.Map<IIppResponseMessage, IppResponseMessage>( src, dst );
+                return dst;
+            } );
         }
     }
 }

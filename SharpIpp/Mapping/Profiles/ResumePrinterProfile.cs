@@ -16,12 +16,26 @@ namespace SharpIpp.Mapping.Profiles
                 return dst;
             });
 
+            mapper.CreateMap<IIppRequestMessage, ResumePrinterRequest>( ( src, map ) =>
+            {
+                var dst = new ResumePrinterRequest();
+                map.Map<IIppRequestMessage, IIppPrinterRequest>( src, dst );
+                return dst;
+            } );
+
             mapper.CreateMap<IppResponseMessage, ResumePrinterResponse>((src, map) =>
             {
                 var dst = new ResumePrinterResponse();
                 map.Map<IppResponseMessage, IIppResponseMessage>(src, dst);
                 return dst;
             });
+
+            mapper.CreateMap<ResumePrinterResponse, IppResponseMessage>( ( src, map ) =>
+            {
+                var dst = new IppResponseMessage();
+                map.Map<IIppResponseMessage, IppResponseMessage>( src, dst );
+                return dst;
+            } );
         }
     }
 }

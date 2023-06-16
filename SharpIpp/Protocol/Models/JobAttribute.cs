@@ -38,5 +38,25 @@
         public const string TimeAtCreation = "time-at-creation";
         public const string TimeAtProcessing = "time-at-processing";
         public const string NumberOfInterveningJobs = "time-at-processing";
+        public const string JobPriority = "job-priority";
+        public const string JobHoldUntil = "job-hold-until";
+        public const string PageRanges = "page-ranges";
+        public const string PrintScaling = "print-scaling";
+        public const string RequestingUserName = "requesting-user-name";
+        public const string AttributesCharset = "attributes-charset";
+        public const string AttributesNaturalLanguage = "attributes-natural-language";
+        public const string DocumentNaturalLanguage = "document-natural-language";
+        public const string FirstPrinterName = "first-printer-name";
+        public const string PrinterId = "printer-id";
+        public const string PrinterLocation = "printer-location";
+        public const string PrinterType = "printer-type";
+        public const string PrinterTypeMask = "printer-type-mask";
+        public const string RequestedAttributes = "requested-attributes";
+        public const string Limit = "limit";
+        public const string WhichJobs = "which-jobs";
+        public const string MyJobs = "my-jobs";
+        public const string PrinterUri = "printer-uri";
+        public const string DocumentUri = "document-uri";
+        public const string LastDocument = "last-document";
     }
 }

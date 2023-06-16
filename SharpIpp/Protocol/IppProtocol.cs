@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -43,12 +44,21 @@ namespace SharpIpp.Protocol
             }
 
             using var writer = new BinaryWriter(stream, Encoding.ASCII, true);
-            Write(ippRequestMessage, writer);
+            writer.WriteBigEndian( (short)ippRequestMessage.Version );
+            writer.WriteBigEndian( (short)ippRequestMessage.IppOperation );
+            writer.WriteBigEndian( ippRequestMessage.RequestId );
+            WriteSection(ippRequestMessage, writer);
 
             if (ippRequestMessage.Document != null)
             {
                 await ippRequestMessage.Document.CopyToAsync(stream, 81920, cancellationToken).ConfigureAwait(false);
             }
+        }
+
+        public async Task<IIppRequestMessage> ReadIppRequestAsync( Stream inputStream, CancellationToken cancellationToken = default )
+        {
+            using var reader = new BinaryReader( inputStream, Encoding.ASCII, true );
+            return await ReadIppRequestAsync( reader, cancellationToken );
         }
 
         public Task<IIppResponseMessage> ReadIppResponseAsync(Stream stream, CancellationToken cancellationToken = default)
@@ -110,6 +120,40 @@ namespace SharpIpp.Protocol
             while (true);
         }
 
+        private void ReadSection( BinaryReader reader, IIppRequestMessage res )
+        {
+            IppAttribute? prevAttribute = null;
+            List<IppAttribute>? attributes = null;
+            do
+            {
+                var data = reader.ReadByte();
+                var sectionTag = (SectionTag)data;
+
+                switch ( sectionTag )
+                {
+                    case SectionTag.OperationAttributesTag:
+                        attributes = res.OperationAttributes;
+                        break;
+                    case SectionTag.JobAttributesTag:
+                        attributes = res.JobAttributes;
+                        break;
+                    case SectionTag.EndOfAttributesTag:
+                        return;
+                    default:
+                        if ( attributes == null )
+                        {
+                            reader.BaseStream.Position--;
+                            return;
+                        }
+                        var attribute = ReadAttribute( (Tag)data, reader, prevAttribute );
+                        prevAttribute = attribute;
+                        attributes.Add( attribute );
+                        break;
+                }
+            }
+            while ( true );
+        }
+
         public void Write(BinaryWriter stream, IppAttribute attribute, bool isSet)
         {
             stream.Write((byte)attribute.Tag);
@@ -154,8 +198,26 @@ namespace SharpIpp.Protocol
                 case Range v:
                     Write(v, stream);
                     break;
-                default: throw new ArgumentException($"Type {value.GetType()} not supported in ipp");
+                default: throw new ArgumentException($"Type {value?.GetType()} not supported in ipp");
             }
+        }
+
+        public Task WriteIppResponseAsync( IIppResponseMessage ippResponseMessage, Stream stream, CancellationToken cancellationToken = default )
+        {
+            if ( ippResponseMessage == null )
+            {
+                throw new ArgumentException( $"{nameof( ippResponseMessage )}" );
+            }
+            if ( stream == null )
+            {
+                throw new ArgumentException( $"{nameof( stream )}" );
+            }
+            using var writer = new BinaryWriter( stream, Encoding.ASCII, true );
+            writer.WriteBigEndian( (short)ippResponseMessage.Version );
+            writer.WriteBigEndian( (short)ippResponseMessage.StatusCode );
+            writer.WriteBigEndian( ippResponseMessage.RequestId );
+            WriteSection( ippResponseMessage, writer );
+            return Task.CompletedTask;
         }
 
         public object ReadValue(BinaryReader stream, Tag tag)
@@ -254,12 +316,22 @@ namespace SharpIpp.Protocol
             return attribute;
         }
 
-        public void Write(IIppRequestMessage requestMessage, BinaryWriter writer)
+        public async Task<IIppRequestMessage> ReadIppRequestAsync( BinaryReader reader, CancellationToken cancellationToken = default )
         {
-            writer.WriteBigEndian((short)requestMessage.Version);
-            writer.WriteBigEndian((short)requestMessage.IppOperation);
-            writer.WriteBigEndian(requestMessage.RequestId);
+            IppRequestMessage message = new IppRequestMessage
+            {
+                Version = (IppVersion)reader.ReadInt16BigEndian(),
+                IppOperation = (IppOperation)reader.ReadInt16BigEndian(),
+                RequestId = reader.ReadInt32BigEndian()
+            };
+            ReadSection( reader, message );
+            message.Document = new MemoryStream();
+            await reader.BaseStream.CopyToAsync( message.Document );
+            return message;
+        }
 
+        public void WriteSection(IIppRequestMessage requestMessage, BinaryWriter writer)
+        {
             //operation-attributes-tag https://tools.ietf.org/html/rfc8010#section-3.5.1
             var attributes = requestMessage.OperationAttributes.Select(x => (SectionTag.OperationAttributesTag, x))
                 .Concat(requestMessage.JobAttributes.Select(x => (SectionTag.JobAttributesTag, x)))
@@ -288,6 +360,28 @@ namespace SharpIpp.Protocol
 
             //end-of-attributes-tag https://tools.ietf.org/html/rfc8010#section-3.5.1
             writer.Write((byte)SectionTag.EndOfAttributesTag);
+        }
+
+        public void WriteSection( IIppResponseMessage responseMessage, BinaryWriter writer )
+        {
+            IppAttribute? prevAttribute = null;
+            SectionTag? prevTag = null;
+            foreach ( var ippSection in responseMessage.Sections )
+            {
+                if ( prevTag == null || ippSection.Tag != prevTag )
+                {
+                    writer.Write( (byte)ippSection.Tag );
+                }
+                foreach(var ippAttribute in ippSection.Attributes )
+                {
+                    var isSet = prevAttribute != null && ippAttribute.Name == prevAttribute.Name;
+                    Write( writer, ippAttribute, isSet );
+                    prevAttribute = ippAttribute;
+                }
+                prevTag = ippSection.Tag;
+            }
+            //end-of-attributes-tag https://tools.ietf.org/html/rfc8010#section-3.5.1
+            writer.Write( (byte)SectionTag.EndOfAttributesTag );
         }
     }
 }

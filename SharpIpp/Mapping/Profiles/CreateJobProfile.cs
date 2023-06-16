@@ -21,12 +21,27 @@ namespace SharpIpp.Mapping.Profiles
                 return dst;
             });
 
+            mapper.CreateMap<IppRequestMessage, CreateJobRequest>( ( src, map ) =>
+            {
+                var dst = new CreateJobRequest { NewJobAttributes = new NewJobAttributes() };
+                map.Map<IppRequestMessage, IIppPrinterRequest>( src, dst );
+                map.Map( src, dst.NewJobAttributes );
+                return dst;
+            } );
+
             mapper.CreateMap<IppResponseMessage, CreateJobResponse>((src, map) =>
             {
                 var dst = new CreateJobResponse();
                 map.Map<IppResponseMessage, IIppJobResponse>(src, dst);
                 return dst;
             });
+
+            mapper.CreateMap<CreateJobResponse, IppResponseMessage>( ( src, map ) =>
+            {
+                var dst = new IppResponseMessage();
+                map.Map<IIppJobResponse, IppResponseMessage>( src, dst );
+                return dst;
+            } );
         }
     }
 }

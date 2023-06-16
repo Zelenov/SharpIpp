@@ -1,6 +1,7 @@
 ﻿using System;
-
+using System.Linq;
 using SharpIpp.Models;
+using SharpIpp.Protocol;
 using SharpIpp.Protocol.Models;
 
 namespace SharpIpp.Mapping.Profiles
@@ -36,12 +37,36 @@ namespace SharpIpp.Mapping.Profiles
                 return dst;
             });
 
+            mapper.CreateMap<IIppRequestMessage, PrintUriRequest>( ( src, map ) =>
+            {
+                var dst = new PrintUriRequest
+                {
+                    NewJobAttributes = new NewJobAttributes(),
+                    DocumentAttributes = new DocumentAttributes()
+                };
+                map.Map<IIppRequestMessage, IIppPrinterRequest>( src, dst );
+                if ( Uri.TryCreate( src.OperationAttributes.FirstOrDefault( x => x.Name == JobAttribute.DocumentUri )?.Value as string, UriKind.RelativeOrAbsolute, out var documentUri ) )
+                    dst.DocumentUri = documentUri;
+                else
+                    throw new ArgumentException( $"{JobAttribute.DocumentUri} attribute must be set" ); ;
+                map.Map( src, dst.NewJobAttributes );
+                map.Map( src, dst.DocumentAttributes );
+                return dst;
+            } );
+
             mapper.CreateMap<IppResponseMessage, PrintUriResponse>((src, map) =>
             {
                 var dst = new PrintUriResponse();
                 map.Map<IppResponseMessage, IIppJobResponse>(src, dst);
                 return dst;
             });
+
+            mapper.CreateMap<PrintUriResponse, IppResponseMessage>( ( src, map ) =>
+            {
+                var dst = new IppResponseMessage();
+                map.Map<IIppJobResponse, IppResponseMessage>( src, dst );
+                return dst;
+            } );
         }
     }
 }

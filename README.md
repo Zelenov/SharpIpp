@@ -3,6 +3,7 @@
 </br>
 C# implementation of [Internet Printing Protocol/1.1](https://tools.ietf.org/html/rfc2911) and some bits of [CUPS 1.0](http://www.cups.org/doc/spec-ipp.html).
 It can print! And do other stuff with any printer, connected via Internet.
+It can also be used to create IPP server.
 
 ## Installation
 Available on [nuget][SharpIpp.nuget]
@@ -18,20 +19,27 @@ var request = new PrintJobRequest
 {
     PrinterUri = printer,
     Document = stream,
-    JobName = "Test Job",
-    IppAttributeFidelity = false,
-    DocumentName = "Document Name",
-    DocumentFormat = "application/octet-stream",
-    DocumentNaturalLanguage = "en",
-    MultipleDocumentHandling = MultipleDocumentHandling.SeparateDocumentsCollatedCopies,
-    Copies = 1,
-    Finishings = Finishings.None,
-    PageRanges = new[] {new Range(1, 1)},
-    Sides = Sides.OneSided,
-    NumberUp = 1,
-    OrientationRequested = Orientation.Portrait,
-    PrinterResolution = new Resolution(600, 600, ResolutionUnit.DotsPerInch),
-    PrintQuality = PrintQuality.Normal
+    DocumentAttributes = new DocumentAttributes
+    {
+        DocumentName = "Document Name",
+        DocumentFormat = "application/octet-stream",
+        Compression = Compression.None,
+        DocumentNaturalLanguage = "en",
+    },
+    NewJobAttributes = new NewJobAttributes
+    {
+        Copies = 1,
+        MultipleDocumentHandling = MultipleDocumentHandling.SeparateDocumentsCollatedCopies,
+        JobName = "Test Job",
+        IppAttributeFidelity = false,
+        Finishings = Finishings.None,
+        PageRanges = new[] { new SharpIpp.Protocol.Models.Range( 1, 1 ) },
+        Sides = Sides.OneSided,
+        NumberUp = 1,
+        OrientationRequested = Orientation.Portrait,
+        PrinterResolution = new Resolution( 600, 600, ResolutionUnit.DotsPerInch ),
+        PrintQuality = PrintQuality.Normal
+    }
 };
 var response = await client.PrintJobAsync(request);
 ```

@@ -19,6 +19,7 @@ namespace SharpIpp.Mapping.Profiles
 
             var unixStartTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified);
             mapper.CreateIppMap<int, DateTime>((src, map) => unixStartTime.AddSeconds(src));
+            mapper.CreateIppMap<DateTime, int>( ( src, map ) => ( src - unixStartTime ).Seconds );
             mapper.CreateIppMap<int, IppOperation>((src, map) => (IppOperation)(short)src);
             mapper.CreateIppMap<int, Finishings>((src, map) => (Finishings)src);
             mapper.CreateIppMap<int, IppStatusCode>((src, map) => (IppStatusCode)src);

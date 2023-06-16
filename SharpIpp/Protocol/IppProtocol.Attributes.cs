@@ -75,13 +75,6 @@ namespace SharpIpp.Protocol
 
         public DateTimeOffset ReadDateTimeOffset(BinaryReader stream)
         {
-            var length = stream.ReadInt16BigEndian();
-
-            if (length != 11)
-            {
-                throw new ArgumentException($"Expected datetime value length: 11, actual :{length}");
-            }
-
             var year = stream.ReadInt16BigEndian();
             var month = stream.ReadByte();
             var day = stream.ReadByte();

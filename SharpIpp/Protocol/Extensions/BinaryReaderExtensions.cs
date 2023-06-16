@@ -13,5 +13,15 @@ namespace SharpIpp.Protocol.Extensions
         {
             return Bytes.Reverse(reader.ReadInt32());
         }
+
+        public static short ReadInt16BigEndianAsync( this BinaryReader reader )
+        {
+            return Bytes.Reverse( reader.ReadInt16() );
+        }
+
+        public static int ReadInt32BigEndianAsync( this BinaryReader reader )
+        {
+            return Bytes.Reverse( reader.ReadInt32() );
+        }
     }
 }
