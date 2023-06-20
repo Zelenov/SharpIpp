@@ -147,7 +147,7 @@ namespace SharpIpp.Mapping.Profiles
                     if ( src.JobMediaSheetsSupported != null )
                         dic.Add( PrinterAttribute.JobMediaSheetsSupported, new IppAttribute[] { new IppAttribute( Tag.RangeOfInteger, PrinterAttribute.JobMediaSheetsSupported, src.JobMediaSheetsSupported.Value ) } );
                     if ( src.MultipleDocumentJobsSupported != null )
-                        dic.Add( PrinterAttribute.ColorSupported, new IppAttribute[] { new IppAttribute( Tag.Boolean, PrinterAttribute.ColorSupported, src.MultipleDocumentJobsSupported.Value ) } );
+                        dic.Add( PrinterAttribute.MultipleDocumentJobsSupported, new IppAttribute[] { new IppAttribute( Tag.Boolean, PrinterAttribute.MultipleDocumentJobsSupported, src.MultipleDocumentJobsSupported.Value ) } );
                     if ( src.MultipleOperationTimeOut != null )
                         dic.Add( PrinterAttribute.MultipleOperationTimeOut, new IppAttribute[] { new IppAttribute( Tag.Integer, PrinterAttribute.MultipleOperationTimeOut, src.MultipleOperationTimeOut.Value ) } );
                     if ( src.NaturalLanguageConfigured != null )
