@@ -1,18 +1,10 @@
 ﻿using SharpIpp;
-using System.Diagnostics;
 using SharpIpp.Protocol.Models;
 using System.Collections.Concurrent;
-using System.Threading;
 using SharpIpp.Protocol;
 using SharpIppServerExample.Models;
-using Quartz.Util;
-using System.Diagnostics.Metrics;
-using System.Security.Cryptography.Xml;
-using Microsoft.AspNetCore.Http;
-using static Quartz.Logging.OperationName;
 using SharpIpp.Models;
 using Microsoft.AspNetCore.StaticFiles;
-using System.Collections.Generic;
 
 namespace SharpIppServerExample.Services;
 
@@ -243,11 +235,7 @@ public class PrinterJobsService
             RequestId = request.RequestId,
             Version = request.Version,
             StatusCode = IppStatusCode.SuccessfulOk,
-            PrinterState = PrinterState.Idle,
-            PrinterStateMessage = "idle",
-            PrinterStateReasons = new string[] { "idle" },
-            PrintScalingDefault = PrintScaling.Auto,
-            PrintScalingSupported = Enum.GetValues( typeof( PrintScaling ) ).Cast<PrintScaling>().ToArray(),
+            PrinterState = _pendingJobs.IsEmpty ? PrinterState.Idle : PrinterState.Processing,
             CharsetConfigured = "utf-8",
             CharsetSupported = new string[] { "utf-8" },
             NaturalLanguageConfigured = "en",
@@ -256,8 +244,8 @@ public class PrinterJobsService
             PrinterMakeAndModel = "SharpIpp",
             PrinterMoreInfo = "SharpIpp",
             PrinterName = "SharpIpp",
-            PrinterInfo = "SharpIpp example",
-            IppVersionsSupported = new string[] { "1.1" },
+            PrinterInfo = "SharpIpp",
+            IppVersionsSupported = Enum.GetValues( typeof( IppVersion ) ).Cast<IppVersion>().Select(x => x.ToString()).ToArray(),
             DocumentFormatDefault = _contentTypeProvider.Mappings[".pdf"],
             ColorSupported = true,
             PrinterCurrentTime = DateTimeOffset.Now,
