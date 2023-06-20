@@ -59,6 +59,7 @@ public class PrinterJobsService
                 ResumePrinterRequest x => GetResumePrinterResponse(x),
                 SendDocumentRequest x => GetSendDocumentResponse(x),
                 SendUriRequest x => GetSendUriResponse(x),
+                ValidateJobRequest x => GetValidateJobResponse(x),
                 _ => throw new NotImplementedException()
             };
             await _ippServer.SendResponseAsync( response, outputStream );
@@ -67,6 +68,16 @@ public class PrinterJobsService
         {
             _logger.LogError( ex, "Unable to process request" );
         }
+    }
+
+    private ValidateJobResponse GetValidateJobResponse( ValidateJobRequest request )
+    {
+        return new ValidateJobResponse
+        {
+            RequestId = request.RequestId,
+            Version = request.Version,
+            StatusCode = IppStatusCode.SuccessfulOk
+        };
     }
 
     private SendUriResponse GetSendUriResponse( SendUriRequest request )
