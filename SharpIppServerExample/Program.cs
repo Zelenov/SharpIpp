@@ -21,21 +21,9 @@ builder.Services
     .AddQuartzHostedService( q => q.WaitForJobsToComplete = true );
 
 var app = builder.Build();
-
-// Configure the HTTP request pipeline.
-
-//app.UseHttpsRedirection();
-
 app.MapGet( "/", () => "IPP printer" );
-
 app.MapPost( "/", async (HttpContext context, PrinterJobsService printerService) =>
 {
     await printerService.ProcessRequestAsync( context.Request.Body, context.Response.Body );
 } );
-
-app.MapPost( "/ipp/print", async ( HttpContext context, PrinterJobsService printerService ) =>
-{
-    await printerService.ProcessRequestAsync( context.Request.Body, context.Response.Body );
-} );
-
 app.Run();
