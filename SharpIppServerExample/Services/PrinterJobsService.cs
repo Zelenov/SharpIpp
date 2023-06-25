@@ -5,6 +5,7 @@ using SharpIpp.Protocol;
 using SharpIppServerExample.Models;
 using SharpIpp.Models;
 using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.Extensions.Options;
 
 namespace SharpIppServerExample.Services;
 
@@ -14,6 +15,7 @@ public class PrinterJobsService
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ILogger<PrinterJobsService> _logger;
     private readonly SharpIppServer _ippServer;
+    private readonly IOptions<PrinterOptions> _options;
     private readonly FileExtensionContentTypeProvider _contentTypeProvider;
     private bool _isPaused;
     private readonly ConcurrentDictionary<int, PrinterJob> _createdJobs = new();
@@ -22,13 +24,22 @@ public class PrinterJobsService
     private readonly ConcurrentDictionary<int, PrinterJob> _suspendedJobs = new();
     private readonly ConcurrentDictionary<int, PrinterJob> _canceledJobs = new();
     private readonly ConcurrentDictionary<int, PrinterJob> _completedJobs = new();
+    private readonly string _documentFormatDefault;
+    private readonly DateTimeOffset _startTime;
+    private readonly PrintScaling _printScalingDefault = PrintScaling.None;
 
-    public PrinterJobsService(IHttpContextAccessor httpContextAccessor, ILogger<PrinterJobsService> logger)
+    public PrinterJobsService(
+        IHttpContextAccessor httpContextAccessor,
+        ILogger<PrinterJobsService> logger,
+        IOptions<PrinterOptions> options)
     {
         _httpContextAccessor = httpContextAccessor;
         _logger = logger;
         _ippServer = new SharpIppServer();
+        _options = options;
         _contentTypeProvider = new FileExtensionContentTypeProvider();
+        _documentFormatDefault = _contentTypeProvider.Mappings[".pdf"];
+        _startTime = DateTimeOffset.UtcNow.AddMinutes( -1 );
     }
 
     private int GetNextValue()
@@ -114,6 +125,8 @@ public class PrinterJobsService
         var jobId = GetJobId( request );
         if ( jobId.HasValue && _createdJobs.TryRemove( jobId.Value, out var job ) )
         {
+            request.DocumentAttributes ??= new();
+            request.DocumentAttributes.DocumentFormat ??= _documentFormatDefault;
             job.Requests.Add( request );
             _logger.LogDebug( "Document has been added to job {id}", jobId );
             if ( request.LastDocument )
@@ -197,6 +210,10 @@ public class PrinterJobsService
     private PrintUriResponse GetPrintUriResponse( PrintUriRequest request )
     {
         var job = new PrinterJob( GetNextValue(), request.RequestingUserName, DateTimeOffset.UtcNow );
+        request.DocumentAttributes ??= new();
+        request.DocumentAttributes.DocumentFormat ??= _documentFormatDefault;
+        request.NewJobAttributes ??= new();
+        request.NewJobAttributes.PrintScaling ??= _printScalingDefault;
         job.Requests.Add( request );
         _createdJobs.TryAdd( job.Id, job );
         _logger.LogDebug( "Job {id} has been added to queue", job.Id );
@@ -241,6 +258,7 @@ public class PrinterJobsService
 
     private GetPrinterAttributesResponse GetGetPrinterAttributesResponse( GetPrinterAttributesRequest request )
     {
+        var options = _options.Value;
         return new GetPrinterAttributesResponse
         {
             RequestId = request.RequestId,
@@ -252,18 +270,28 @@ public class PrinterJobsService
             NaturalLanguageConfigured = "en",
             GeneratedNaturalLanguageSupported = new string[] { "en" },
             PrinterIsAcceptingJobs = true,
-            PrinterMakeAndModel = "SharpIpp",
-            PrinterMoreInfo = "SharpIpp",
-            PrinterName = "SharpIpp",
-            PrinterInfo = "SharpIpp",
+            PrinterMakeAndModel = options.Name,
+            PrinterMoreInfo = options.Name,
+            PrinterName = options.Name,
+            PrinterInfo = options.Name,
+            PrinterMoreInfoManufacturer = options.Name,
             IppVersionsSupported = Enum.GetValues( typeof( IppVersion ) ).Cast<IppVersion>().Select(x => x.ToString()).ToArray(),
-            DocumentFormatDefault = _contentTypeProvider.Mappings[".pdf"],
+            DocumentFormatDefault = _documentFormatDefault,
             ColorSupported = true,
             PrinterCurrentTime = DateTimeOffset.Now,
-            OperationsSupported = Enum.GetValues( typeof( IppOperation ) ).Cast<IppOperation>().ToArray(),
+            OperationsSupported = Enum.GetValues( typeof( IppOperation ) ).Cast<IppOperation>().Except(new List<IppOperation> { IppOperation.Reserved1, IppOperation.Reserved2, IppOperation.ReservedForAFutureOperation } ).ToArray(),
             QueuedJobCount = _pendingJobs.Count,
-            DocumentFormatSupported = new string[] { _contentTypeProvider.Mappings[".pdf"] },
-            MultipleDocumentJobsSupported = true
+            DocumentFormatSupported = new string[] { _documentFormatDefault },
+            MultipleDocumentJobsSupported = true,
+            CompressionSupported = new Compression[] { Compression.None },
+            JobImpressionsSupported = new SharpIpp.Protocol.Models.Range(0, int.MaxValue),
+            PrinterLocation = "Internet",
+            PrintScalingDefault = _printScalingDefault,
+            PrintScalingSupported = new PrintScaling[] { PrintScaling.None },
+            PrinterUriSupported = GetPrinterUrls().ToArray(),
+            UriAuthenticationSupported = GetPrinterUrls().Select(x => "none").ToArray(),
+            UriSecuritySupported = GetPrinterUrls().Select(x => "none").ToArray(),
+            PrinterUpTime = (int)(_startTime - DateTimeOffset.UtcNow).TotalSeconds
         };
     }
 
@@ -392,6 +420,9 @@ public class PrinterJobsService
     private CreateJobResponse GetCreateJobResponse( CreateJobRequest request )
     {
         var job = new PrinterJob( GetNextValue(), request.RequestingUserName, DateTimeOffset.UtcNow );
+        request.NewJobAttributes ??= new();
+        request.NewJobAttributes.PrintScaling ??= _printScalingDefault;
+        job.Requests.Add( request );
         _createdJobs.TryAdd( job.Id, job );
         _logger.LogDebug( "Job {id} has been created", job.Id );
         return new CreateJobResponse
@@ -472,6 +503,10 @@ public class PrinterJobsService
     private PrintJobResponse GetPrintJobResponse( PrintJobRequest request )
     {
         var job = new PrinterJob( GetNextValue(), request.RequestingUserName, DateTimeOffset.UtcNow );
+        request.DocumentAttributes ??= new();
+        request.DocumentAttributes.DocumentFormat ??= _documentFormatDefault;
+        request.NewJobAttributes ??= new();
+        request.NewJobAttributes.PrintScaling ??= _printScalingDefault;
         job.Requests.Add( request );
         _pendingJobs.TryAdd( job.Id, job );
         _logger.LogDebug( "Job {id} has been added to queue", job.Id );
@@ -489,7 +524,17 @@ public class PrinterJobsService
     private string GetPrinterUrl()
     {
         var request = _httpContextAccessor.HttpContext?.Request ?? throw new Exception( "Unable to access HttpContext" );
-        return $"ipp://{request.Host}{request.PathBase}";
+        return $"ipp://{request.Host}{request.PathBase}{request.Path}";
+    }
+
+    private IEnumerable<string> GetPrinterUrls()
+    {
+        var request = _httpContextAccessor.HttpContext?.Request ?? throw new Exception( "Unable to access HttpContext" );
+        var options = _options.Value;
+        yield return $"ipp://{request.Host}{request.PathBase}";
+        yield return $"ipp://{request.Host}{request.PathBase}/{options.Name}";
+        yield return $"ipp://{request.Host}{request.PathBase}/ipp/print";
+        yield return $"ipp://{request.Host}{request.PathBase}/ipp/print/{options.Name}";
     }
 
     private int? GetJobId( IIppJobRequest request )
