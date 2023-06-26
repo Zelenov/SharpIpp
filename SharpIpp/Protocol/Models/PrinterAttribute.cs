@@ -41,5 +41,9 @@
         public const string PagesPerMinuteColor = "pages-per-minute-color";
         public const string PrintScalingSupported = "print-scaling-supported";
         public const string PrintScalingDefault = "print-scaling-default";
+        public const string MediaDefault = "media-default";
+        public const string MediaSupported = "media-supported";
+        public const string SidesDefault = "sides-default";
+        public const string SidesSupported = "sides-supported";
     }
 }

@@ -27,6 +27,8 @@ public class PrinterJobsService
     private readonly string _documentFormatDefault;
     private readonly DateTimeOffset _startTime;
     private readonly PrintScaling _printScalingDefault = PrintScaling.None;
+    private readonly Sides _sidesDefault = Sides.OneSided;
+    private readonly string _mediaDefault = "iso_a4_210x297mm";
 
     public PrinterJobsService(
         IHttpContextAccessor httpContextAccessor,
@@ -214,6 +216,8 @@ public class PrinterJobsService
         request.DocumentAttributes.DocumentFormat ??= _documentFormatDefault;
         request.NewJobAttributes ??= new();
         request.NewJobAttributes.PrintScaling ??= _printScalingDefault;
+        request.NewJobAttributes.Sides ??= _sidesDefault;
+        request.NewJobAttributes.Media ??= _mediaDefault;
         job.Requests.Add( request );
         _createdJobs.TryAdd( job.Id, job );
         _logger.LogDebug( "Job {id} has been added to queue", job.Id );
@@ -275,7 +279,7 @@ public class PrinterJobsService
             PrinterName = options.Name,
             PrinterInfo = options.Name,
             PrinterMoreInfoManufacturer = options.Name,
-            IppVersionsSupported = Enum.GetValues( typeof( IppVersion ) ).Cast<IppVersion>().Select(x => x.ToString()).ToArray(),
+            IppVersionsSupported = new string[] { "1.1" },
             DocumentFormatDefault = _documentFormatDefault,
             ColorSupported = true,
             PrinterCurrentTime = DateTimeOffset.Now,
@@ -288,10 +292,14 @@ public class PrinterJobsService
             PrinterLocation = "Internet",
             PrintScalingDefault = _printScalingDefault,
             PrintScalingSupported = new PrintScaling[] { PrintScaling.None },
-            PrinterUriSupported = GetPrinterUrls().ToArray(),
-            UriAuthenticationSupported = GetPrinterUrls().Select(x => "none").ToArray(),
-            UriSecuritySupported = GetPrinterUrls().Select(x => "none").ToArray(),
-            PrinterUpTime = (int)(_startTime - DateTimeOffset.UtcNow).TotalSeconds
+            PrinterUriSupported = new string[] { GetPrinterUrl() },
+            UriAuthenticationSupported = new string[] { "none" },
+            UriSecuritySupported = new string[] { "none" },
+            PrinterUpTime = (int)(_startTime - DateTimeOffset.UtcNow).TotalSeconds,
+            MediaDefault = _mediaDefault,
+            MediaSupported = new string[] { _mediaDefault },
+            SidesDefault = _sidesDefault,
+            SidesSupported = Enum.GetValues( typeof( Sides ) ).Cast<Sides>().ToArray(),
         };
     }
 
@@ -402,7 +410,7 @@ public class PrinterJobsService
             attributes.Media = jobAttributes?.Media;
         if ( IsRequired( JobAttribute.PrintQuality ) )
             attributes.PrintQuality = jobAttributes?.PrintQuality;
-        if ( IsRequired( JobAttribute.PrintQuality ) )
+        if ( IsRequired( JobAttribute.Sides ) )
             attributes.Sides = jobAttributes?.Sides;
         return attributes;
     }
@@ -422,6 +430,8 @@ public class PrinterJobsService
         var job = new PrinterJob( GetNextValue(), request.RequestingUserName, DateTimeOffset.UtcNow );
         request.NewJobAttributes ??= new();
         request.NewJobAttributes.PrintScaling ??= _printScalingDefault;
+        request.NewJobAttributes.Sides ??= _sidesDefault;
+        request.NewJobAttributes.Media ??= _mediaDefault;
         job.Requests.Add( request );
         _createdJobs.TryAdd( job.Id, job );
         _logger.LogDebug( "Job {id} has been created", job.Id );
@@ -507,6 +517,8 @@ public class PrinterJobsService
         request.DocumentAttributes.DocumentFormat ??= _documentFormatDefault;
         request.NewJobAttributes ??= new();
         request.NewJobAttributes.PrintScaling ??= _printScalingDefault;
+        request.NewJobAttributes.Sides ??= _sidesDefault;
+        request.NewJobAttributes.Media ??= _mediaDefault;
         job.Requests.Add( request );
         _pendingJobs.TryAdd( job.Id, job );
         _logger.LogDebug( "Job {id} has been added to queue", job.Id );
@@ -525,16 +537,6 @@ public class PrinterJobsService
     {
         var request = _httpContextAccessor.HttpContext?.Request ?? throw new Exception( "Unable to access HttpContext" );
         return $"ipp://{request.Host}{request.PathBase}{request.Path}";
-    }
-
-    private IEnumerable<string> GetPrinterUrls()
-    {
-        var request = _httpContextAccessor.HttpContext?.Request ?? throw new Exception( "Unable to access HttpContext" );
-        var options = _options.Value;
-        yield return $"ipp://{request.Host}{request.PathBase}";
-        yield return $"ipp://{request.Host}{request.PathBase}/{options.Name}";
-        yield return $"ipp://{request.Host}{request.PathBase}/ipp/print";
-        yield return $"ipp://{request.Host}{request.PathBase}/ipp/print/{options.Name}";
     }
 
     private int? GetJobId( IIppJobRequest request )

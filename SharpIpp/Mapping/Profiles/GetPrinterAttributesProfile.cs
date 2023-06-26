@@ -119,6 +119,10 @@ namespace SharpIpp.Mapping.Profiles
                         map.MapFromDicSetNull<string[]?>(src, PrinterAttribute.UriAuthenticationSupported),
                     UriSecuritySupported =
                         map.MapFromDicSetNull<string[]?>(src, PrinterAttribute.UriSecuritySupported),
+                    MediaDefault = map.MapFromDic<string?>(src, PrinterAttribute.MediaDefault),
+                    MediaSupported = map.MapFromDicSetNull<string[]?>( src, PrinterAttribute.MediaSupported ),
+                    SidesDefault = map.MapFromDic<Sides?>( src, PrinterAttribute.SidesDefault ),
+                    SidesSupported = map.MapFromDicSetNull<Sides[]?>( src, PrinterAttribute.SidesSupported )
                 });
 
             mapper.CreateMap<GetPrinterAttributesResponse, IDictionary<string, IppAttribute[]>>( ( src, map ) =>
@@ -202,6 +206,14 @@ namespace SharpIpp.Mapping.Profiles
                         dic.Add( PrinterAttribute.UriAuthenticationSupported, src.UriAuthenticationSupported.Select( x => new IppAttribute( Tag.Keyword, PrinterAttribute.UriAuthenticationSupported, x ) ).ToArray() );
                     if ( src.UriSecuritySupported?.Any() ?? false )
                         dic.Add( PrinterAttribute.UriSecuritySupported, src.UriSecuritySupported.Select( x => new IppAttribute( Tag.Keyword, PrinterAttribute.UriSecuritySupported, x ) ).ToArray() );
+                    if( src.MediaDefault != null )
+                        dic.Add( PrinterAttribute.MediaDefault, new IppAttribute[] { new IppAttribute( Tag.Keyword, PrinterAttribute.MediaDefault, src.MediaDefault ) } );
+                    if ( src.MediaSupported?.Any() ?? false )
+                        dic.Add( PrinterAttribute.MediaSupported, src.MediaSupported.Select( x => new IppAttribute( Tag.Keyword, PrinterAttribute.MediaSupported, x ) ).ToArray() );
+                    if ( src.SidesDefault != null )
+                        dic.Add( PrinterAttribute.SidesDefault, new IppAttribute[] { new IppAttribute( Tag.Keyword, PrinterAttribute.SidesDefault, map.Map<string>( src.SidesDefault ) ) } );
+                    if ( src.SidesSupported?.Any() ?? false )
+                        dic.Add( PrinterAttribute.SidesSupported, src.SidesSupported.Select( x => new IppAttribute( Tag.Keyword, PrinterAttribute.SidesSupported, map.Map<string>( x ) ) ).ToArray() );
                     return dic;
                 } );
         }

@@ -204,5 +204,13 @@ namespace SharpIpp.Models
         public int RequestId { get; set; }
 
         public List<IppSection> Sections { get; } = new List<IppSection>();
+
+        public string? MediaDefault { get; set; }
+
+        public string[]? MediaSupported { get; set; }
+
+        public Sides? SidesDefault { get; set; }
+
+        public Sides[]? SidesSupported { get; set; }
     }
 }
