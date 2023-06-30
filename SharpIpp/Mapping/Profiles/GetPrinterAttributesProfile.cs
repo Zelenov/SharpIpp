@@ -232,7 +232,7 @@ namespace SharpIpp.Mapping.Profiles
                     if ( src.PdfVersionsSupported?.Any() ?? false )
                         dic.Add( PrinterAttribute.PdfVersionsSupported, src.PdfVersionsSupported.Select( x => new IppAttribute( Tag.Keyword, PrinterAttribute.PdfVersionsSupported, x ) ).ToArray() );
                     if ( src.PrinterResolutionDefault != null )
-                        dic.Add( PrinterAttribute.PrinterResolutionDefault, new IppAttribute[] { new IppAttribute( Tag.Resolution, PrinterAttribute.FinishingsDefault, src.PrinterResolutionDefault.Value ) } );
+                        dic.Add( PrinterAttribute.PrinterResolutionDefault, new IppAttribute[] { new IppAttribute( Tag.Resolution, PrinterAttribute.PrinterResolutionDefault, src.PrinterResolutionDefault.Value ) } );
                     if ( src.PrinterResolutionSupported?.Any() ?? false )
                         dic.Add( PrinterAttribute.PrinterResolutionSupported, src.PrinterResolutionSupported.Select( x => new IppAttribute( Tag.Resolution, PrinterAttribute.PrinterResolutionSupported, x ) ).ToArray() );
                     if ( src.PrintQualityDefault != null )

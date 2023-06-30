@@ -45,7 +45,7 @@
         public const string MediaSupported = "media-supported";
         public const string SidesDefault = "sides-default";
         public const string SidesSupported = "sides-supported";
-        public const string FinishingsDefault = "finishings-supported";
+        public const string FinishingsDefault = "finishings-default";
         public const string PdfVersionsSupported = "pdf-versions-supported";
         public const string PrinterResolutionDefault = "printer-resolution-default";
         public const string PrinterResolutionSupported = "printer-resolution-supported";

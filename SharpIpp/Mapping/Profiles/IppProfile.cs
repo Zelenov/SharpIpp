@@ -49,6 +49,13 @@ namespace SharpIpp.Mapping.Profiles
             {
                 dst.Version = src.Version;
                 dst.RequestId = src.RequestId;
+                if ( !src.Sections.Any( x => x.Tag == SectionTag.OperationAttributesTag ) )
+                {
+                    var section = new IppSection { Tag = SectionTag.OperationAttributesTag };
+                    section.Attributes.Add( new IppAttribute( Tag.Charset, JobAttribute.AttributesCharset, "utf-8" ) );
+                    section.Attributes.Add( new IppAttribute( Tag.NaturalLanguage, JobAttribute.AttributesNaturalLanguage, "en" ) );
+                    dst.Sections.Add( section );
+                }
                 dst.Sections.AddRange( src.Sections );
                 return dst;
             } );
