@@ -26,9 +26,15 @@ public class PrinterJobsService
     private readonly ConcurrentDictionary<int, PrinterJob> _completedJobs = new();
     private readonly string _documentFormatDefault;
     private readonly DateTimeOffset _startTime;
-    private readonly PrintScaling _printScalingDefault = PrintScaling.None;
+    private readonly PrintScaling _printScalingDefault = PrintScaling.Auto;
     private readonly Sides _sidesDefault = Sides.OneSided;
     private readonly string _mediaDefault = "iso_a4_210x297mm";
+    private readonly Resolution _printerResolutionDefault = new( 600, 600, ResolutionUnit.DotsPerInch );
+    private readonly Finishings _finishingsDefault = Finishings.None;
+    private readonly PrintQuality _printQualityDefault = PrintQuality.High;
+    private readonly int _jobPriorityDefault = 50;
+    private readonly int _copiesDefault = 1;
+    private readonly Orientation _orientationRequestedDefault = Orientation.Portrait;
 
     public PrinterJobsService(
         IHttpContextAccessor httpContextAccessor,
@@ -128,7 +134,7 @@ public class PrinterJobsService
         if ( jobId.HasValue && _createdJobs.TryRemove( jobId.Value, out var job ) )
         {
             request.DocumentAttributes ??= new();
-            request.DocumentAttributes.DocumentFormat ??= _documentFormatDefault;
+            FillWithDefaultValues( request.DocumentAttributes );
             job.Requests.Add( request );
             _logger.LogDebug( "Document has been added to job {id}", jobId );
             if ( request.LastDocument )
@@ -213,11 +219,9 @@ public class PrinterJobsService
     {
         var job = new PrinterJob( GetNextValue(), request.RequestingUserName, DateTimeOffset.UtcNow );
         request.DocumentAttributes ??= new();
-        request.DocumentAttributes.DocumentFormat ??= _documentFormatDefault;
+        FillWithDefaultValues( request.DocumentAttributes );
         request.NewJobAttributes ??= new();
-        request.NewJobAttributes.PrintScaling ??= _printScalingDefault;
-        request.NewJobAttributes.Sides ??= _sidesDefault;
-        request.NewJobAttributes.Media ??= _mediaDefault;
+        FillWithDefaultValues( request.NewJobAttributes );
         job.Requests.Add( request );
         _createdJobs.TryAdd( job.Id, job );
         _logger.LogDebug( "Job {id} has been added to queue", job.Id );
@@ -269,37 +273,77 @@ public class PrinterJobsService
             Version = request.Version,
             StatusCode = IppStatusCode.SuccessfulOk,
             PrinterState = _pendingJobs.IsEmpty ? PrinterState.Idle : PrinterState.Processing,
+            PrinterStateReasons = new string[] { "none" },
             CharsetConfigured = "utf-8",
             CharsetSupported = new string[] { "utf-8" },
-            NaturalLanguageConfigured = "en",
-            GeneratedNaturalLanguageSupported = new string[] { "en" },
+            NaturalLanguageConfigured = "en-us",
+            GeneratedNaturalLanguageSupported = new string[] { "en-us" },
             PrinterIsAcceptingJobs = true,
             PrinterMakeAndModel = options.Name,
-            PrinterMoreInfo = options.Name,
             PrinterName = options.Name,
             PrinterInfo = options.Name,
             PrinterMoreInfoManufacturer = options.Name,
-            IppVersionsSupported = new string[] { "1.1" },
+            IppVersionsSupported = new string[] { "1.0", "1.1" },
             DocumentFormatDefault = _documentFormatDefault,
             ColorSupported = true,
             PrinterCurrentTime = DateTimeOffset.Now,
-            OperationsSupported = Enum.GetValues( typeof( IppOperation ) ).Cast<IppOperation>().Except(new List<IppOperation> { IppOperation.Reserved1, IppOperation.Reserved2, IppOperation.ReservedForAFutureOperation } ).ToArray(),
+            OperationsSupported = new[]
+            {
+                IppOperation.PrintJob,
+                IppOperation.PrintUri,
+                IppOperation.ValidateJob,
+                IppOperation.CreateJob,
+                IppOperation.SendDocument,
+                IppOperation.SendUri,
+                IppOperation.CancelJob,
+                IppOperation.GetJobAttributes,
+                IppOperation.GetJobs,
+                IppOperation.GetPrinterAttributes,
+                IppOperation.HoldJob,
+                IppOperation.ReleaseJob,
+                IppOperation.RestartJob,
+                IppOperation.PausePrinter,
+                IppOperation.ResumePrinter
+            },
             QueuedJobCount = _pendingJobs.Count,
             DocumentFormatSupported = new string[] { _documentFormatDefault },
             MultipleDocumentJobsSupported = true,
             CompressionSupported = new Compression[] { Compression.None },
-            JobImpressionsSupported = new SharpIpp.Protocol.Models.Range(0, int.MaxValue),
             PrinterLocation = "Internet",
             PrintScalingDefault = _printScalingDefault,
-            PrintScalingSupported = new PrintScaling[] { PrintScaling.None },
+            PrintScalingSupported = new PrintScaling[] { _printScalingDefault },
             PrinterUriSupported = new string[] { GetPrinterUrl() },
             UriAuthenticationSupported = new string[] { "none" },
             UriSecuritySupported = new string[] { "none" },
-            PrinterUpTime = (int)(_startTime - DateTimeOffset.UtcNow).TotalSeconds,
+            PrinterUpTime = (int)( DateTimeOffset.UtcNow - _startTime).TotalSeconds,
             MediaDefault = _mediaDefault,
             MediaSupported = new string[] { _mediaDefault },
             SidesDefault = _sidesDefault,
-            SidesSupported = Enum.GetValues( typeof( Sides ) ).Cast<Sides>().ToArray(),
+            SidesSupported = Enum.GetValues( typeof( Sides ) ).Cast<Sides>().Where( x => x != Sides.Unsupported ).ToArray(),
+            PdlOverrideSupported = "attempted",
+            MultipleOperationTimeOut = 120,
+            FinishingsDefault = _finishingsDefault,
+            PdfVersionsSupported = new[]
+            {
+                "adobe-1.3",
+                "adobe-1.4",
+                "adobe-1.5",
+                "adobe-1.6",
+                "iso-32000-1_2008"
+            },
+            PrinterResolutionDefault = _printerResolutionDefault,
+            PrinterResolutionSupported = new Resolution[] { _printerResolutionDefault },
+            PrintQualityDefault = _printQualityDefault,
+            PrintQualitySupported = new[] { _printQualityDefault },
+            JobPriorityDefault = _jobPriorityDefault,
+            JobPrioritySupported = 100,
+            CopiesDefault = _copiesDefault,
+            CopiesSupported = new SharpIpp.Protocol.Models.Range(1, 999),
+            OrientationRequestedDefault = _orientationRequestedDefault,
+            OrientationRequestedSupported = Enum.GetValues( typeof( Orientation ) ).Cast<Orientation>().Where( x => x != Orientation.Unsupported ).ToArray(),
+            PageRangesSupported = true,
+            PagesPerMinute = 20,
+            PagesPerMinuteColor = 20
         };
     }
 
@@ -429,9 +473,7 @@ public class PrinterJobsService
     {
         var job = new PrinterJob( GetNextValue(), request.RequestingUserName, DateTimeOffset.UtcNow );
         request.NewJobAttributes ??= new();
-        request.NewJobAttributes.PrintScaling ??= _printScalingDefault;
-        request.NewJobAttributes.Sides ??= _sidesDefault;
-        request.NewJobAttributes.Media ??= _mediaDefault;
+        FillWithDefaultValues( request.NewJobAttributes );
         job.Requests.Add( request );
         _createdJobs.TryAdd( job.Id, job );
         _logger.LogDebug( "Job {id} has been created", job.Id );
@@ -514,11 +556,9 @@ public class PrinterJobsService
     {
         var job = new PrinterJob( GetNextValue(), request.RequestingUserName, DateTimeOffset.UtcNow );
         request.DocumentAttributes ??= new();
-        request.DocumentAttributes.DocumentFormat ??= _documentFormatDefault;
+        FillWithDefaultValues( request.DocumentAttributes );
         request.NewJobAttributes ??= new();
-        request.NewJobAttributes.PrintScaling ??= _printScalingDefault;
-        request.NewJobAttributes.Sides ??= _sidesDefault;
-        request.NewJobAttributes.Media ??= _mediaDefault;
+        FillWithDefaultValues( request.NewJobAttributes );
         job.Requests.Add( request );
         _pendingJobs.TryAdd( job.Id, job );
         _logger.LogDebug( "Job {id} has been added to queue", job.Id );
@@ -596,5 +636,23 @@ public class PrinterJobsService
                 .Take( limit - list.Count )
                 .Select( x => (x, JobState.Canceled) ) ); ;
         return list;
+    }
+
+    private void FillWithDefaultValues(NewJobAttributes attributes)
+    {
+        attributes.PrintScaling ??= _printScalingDefault;
+        attributes.Sides ??= _sidesDefault;
+        attributes.Media ??= _mediaDefault;
+        attributes.PrinterResolution ??= _printerResolutionDefault;
+        attributes.Finishings ??= _finishingsDefault;
+        attributes.PrintQuality ??= _printQualityDefault;
+        attributes.JobPriority ??= _jobPriorityDefault;
+        attributes.Copies ??= _copiesDefault;
+        attributes.OrientationRequested ??= _orientationRequestedDefault;
+    }
+
+    private void FillWithDefaultValues(DocumentAttributes attributes)
+    {
+        attributes.DocumentFormat ??= _documentFormatDefault;
     }
 }

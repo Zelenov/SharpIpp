@@ -212,5 +212,31 @@ namespace SharpIpp.Models
         public Sides? SidesDefault { get; set; }
 
         public Sides[]? SidesSupported { get; set; }
+
+        public Finishings? FinishingsDefault { get; set; }
+
+        public string[]? PdfVersionsSupported { get; set; }
+
+        public Resolution? PrinterResolutionDefault { get; set; }
+
+        public Resolution[]? PrinterResolutionSupported { get; set; }
+
+        public PrintQuality? PrintQualityDefault { get; set; }
+
+        public PrintQuality[]? PrintQualitySupported { get; set; }
+
+        public int? JobPriorityDefault { get; set; }
+
+        public int? JobPrioritySupported { get; set; }
+
+        public int? CopiesDefault { get; set; }
+
+        public Range? CopiesSupported { get; set; }
+
+        public Orientation? OrientationRequestedDefault { get; set; }
+
+        public Orientation[]? OrientationRequestedSupported { get; set; }
+
+        public bool? PageRangesSupported { get; set; }
     }
 }

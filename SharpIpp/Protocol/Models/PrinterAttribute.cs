@@ -45,5 +45,18 @@
         public const string MediaSupported = "media-supported";
         public const string SidesDefault = "sides-default";
         public const string SidesSupported = "sides-supported";
+        public const string FinishingsDefault = "finishings-supported";
+        public const string PdfVersionsSupported = "pdf-versions-supported";
+        public const string PrinterResolutionDefault = "printer-resolution-default";
+        public const string PrinterResolutionSupported = "printer-resolution-supported";
+        public const string PrintQualityDefault = "print-quality-default";
+        public const string PrintQualitySupported = "print-quality-supported";
+        public const string JobPriorityDefault = "job-priority-default";
+        public const string JobPrioritySupported = "job-priority-supported";
+        public const string CopiesDefault = "copies-default";
+        public const string CopiesSupported = "copies-supported";
+        public const string OrientationRequestedDefault = "orientation-requested-default";
+        public const string OrientationRequestedSupported = "orientation-requested-supported";
+        public const string PageRangesSupported = "page-ranges-supported";
     }
 }

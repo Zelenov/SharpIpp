@@ -61,6 +61,7 @@ namespace SharpIpp.Protocol
 
         public void Write(DateTimeOffset value, BinaryWriter stream)
         {
+            stream.WriteBigEndian((short)11);
             stream.WriteBigEndian((short)value.Year);
             stream.Write((byte)value.Month);
             stream.Write((byte)value.Day);
@@ -69,12 +70,19 @@ namespace SharpIpp.Protocol
             stream.Write((byte)value.Second);
             stream.Write((byte)(value.Millisecond / 100));
             stream.Write(value.Offset > TimeSpan.Zero ? Plus : Minus);
-            stream.Write(Math.Abs(value.Offset.Hours));
-            stream.Write(Math.Abs(value.Offset.Minutes));
+            stream.Write((byte)Math.Abs(value.Offset.Hours));
+            stream.Write((byte)Math.Abs(value.Offset.Minutes));
         }
 
         public DateTimeOffset ReadDateTimeOffset(BinaryReader stream)
         {
+            var length = stream.ReadInt16BigEndian();
+
+            if ( length != 11 )
+            {
+                throw new ArgumentException( $"Expected datetime value length: 11, actual :{length}" );
+            }
+
             var year = stream.ReadInt16BigEndian();
             var month = stream.ReadByte();
             var day = stream.ReadByte();

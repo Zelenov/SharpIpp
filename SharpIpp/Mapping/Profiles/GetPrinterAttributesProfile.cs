@@ -122,8 +122,21 @@ namespace SharpIpp.Mapping.Profiles
                     MediaDefault = map.MapFromDic<string?>(src, PrinterAttribute.MediaDefault),
                     MediaSupported = map.MapFromDicSetNull<string[]?>( src, PrinterAttribute.MediaSupported ),
                     SidesDefault = map.MapFromDic<Sides?>( src, PrinterAttribute.SidesDefault ),
-                    SidesSupported = map.MapFromDicSetNull<Sides[]?>( src, PrinterAttribute.SidesSupported )
-                });
+                    SidesSupported = map.MapFromDicSetNull<Sides[]?>( src, PrinterAttribute.SidesSupported ),
+                    FinishingsDefault = map.MapFromDic<Finishings?>( src, PrinterAttribute.FinishingsDefault ),
+                    PdfVersionsSupported = map.MapFromDicSetNull<string[]?>( src, PrinterAttribute.PdfVersionsSupported ),
+                    PrinterResolutionDefault = map.MapFromDic<Resolution?>( src, PrinterAttribute.PrinterResolutionDefault ),
+                    PrinterResolutionSupported = map.MapFromDicSetNull<Resolution[]?>( src, PrinterAttribute.PrinterResolutionSupported ),
+                    PrintQualityDefault = map.MapFromDic<PrintQuality?>( src, PrinterAttribute.PrintQualityDefault ),
+                    PrintQualitySupported = map.MapFromDicSetNull<PrintQuality[]?>( src, PrinterAttribute.PrintQualitySupported ),
+                    JobPriorityDefault = map.MapFromDic<int?>( src, PrinterAttribute.JobPriorityDefault ),
+                    JobPrioritySupported = map.MapFromDic<int?>( src, PrinterAttribute.JobPrioritySupported ),
+                    CopiesDefault = map.MapFromDic<int?>( src, PrinterAttribute.CopiesDefault ),
+                    CopiesSupported = map.MapFromDic<Range?>( src, PrinterAttribute.CopiesSupported ),
+                    OrientationRequestedDefault = map.MapFromDic<Orientation?>( src, PrinterAttribute.OrientationRequestedDefault ),
+                    OrientationRequestedSupported = map.MapFromDicSetNull<Orientation[]?>( src, PrinterAttribute.OrientationRequestedSupported ),
+                    PageRangesSupported = map.MapFromDic<bool?>( src, PrinterAttribute.PageRangesSupported ),
+                } );
 
             mapper.CreateMap<GetPrinterAttributesResponse, IDictionary<string, IppAttribute[]>>( ( src, map ) =>
                 {
@@ -214,6 +227,47 @@ namespace SharpIpp.Mapping.Profiles
                         dic.Add( PrinterAttribute.SidesDefault, new IppAttribute[] { new IppAttribute( Tag.Keyword, PrinterAttribute.SidesDefault, map.Map<string>( src.SidesDefault ) ) } );
                     if ( src.SidesSupported?.Any() ?? false )
                         dic.Add( PrinterAttribute.SidesSupported, src.SidesSupported.Select( x => new IppAttribute( Tag.Keyword, PrinterAttribute.SidesSupported, map.Map<string>( x ) ) ).ToArray() );
+                    if ( src.FinishingsDefault != null )
+                        dic.Add( PrinterAttribute.FinishingsDefault, new IppAttribute[] { new IppAttribute( Tag.Enum, PrinterAttribute.FinishingsDefault, (int)src.FinishingsDefault.Value ) } );
+                    if ( src.PdfVersionsSupported?.Any() ?? false )
+                        dic.Add( PrinterAttribute.PdfVersionsSupported, src.PdfVersionsSupported.Select( x => new IppAttribute( Tag.Keyword, PrinterAttribute.PdfVersionsSupported, x ) ).ToArray() );
+                    if ( src.PrinterResolutionDefault != null )
+                        dic.Add( PrinterAttribute.PrinterResolutionDefault, new IppAttribute[] { new IppAttribute( Tag.Resolution, PrinterAttribute.FinishingsDefault, src.PrinterResolutionDefault.Value ) } );
+                    if ( src.PrinterResolutionSupported?.Any() ?? false )
+                        dic.Add( PrinterAttribute.PrinterResolutionSupported, src.PrinterResolutionSupported.Select( x => new IppAttribute( Tag.Resolution, PrinterAttribute.PrinterResolutionSupported, x ) ).ToArray() );
+                    if ( src.PrintQualityDefault != null )
+                        dic.Add( PrinterAttribute.PrintQualityDefault, new IppAttribute[] { new IppAttribute( Tag.Enum, PrinterAttribute.PrintQualityDefault, (int)src.PrintQualityDefault.Value ) } );
+                    if ( src.PrintQualitySupported?.Any() ?? false )
+                        dic.Add( PrinterAttribute.PrintQualitySupported, src.PrintQualitySupported.Select( x => new IppAttribute( Tag.Enum, PrinterAttribute.PrintQualitySupported, (int)x ) ).ToArray() );
+                    if ( src.JobPriorityDefault != null )
+                        dic.Add( PrinterAttribute.JobPriorityDefault, new IppAttribute[] { new IppAttribute( Tag.Integer, PrinterAttribute.JobPriorityDefault, src.JobPriorityDefault.Value ) } );
+                    if ( src.JobPrioritySupported != null )
+                        dic.Add( PrinterAttribute.JobPrioritySupported, new IppAttribute[] { new IppAttribute( Tag.Integer, PrinterAttribute.JobPrioritySupported, src.JobPrioritySupported.Value ) } );
+                    if ( src.CopiesDefault != null )
+                        dic.Add( PrinterAttribute.CopiesDefault, new IppAttribute[] { new IppAttribute( Tag.Integer, PrinterAttribute.CopiesDefault, src.CopiesDefault.Value ) } );
+                    if ( src.CopiesSupported != null )
+                        dic.Add( PrinterAttribute.CopiesSupported, new IppAttribute[] { new IppAttribute( Tag.RangeOfInteger, PrinterAttribute.CopiesSupported, src.CopiesSupported.Value ) } );
+                    if ( src.OrientationRequestedDefault != null )
+                        dic.Add( PrinterAttribute.OrientationRequestedDefault, new IppAttribute[] { new IppAttribute( Tag.Enum, PrinterAttribute.OrientationRequestedDefault, (int)src.OrientationRequestedDefault.Value ) } );
+                    if ( src.OrientationRequestedSupported?.Any() ?? false )
+                        dic.Add( PrinterAttribute.OrientationRequestedSupported, src.OrientationRequestedSupported.Select( x => new IppAttribute( Tag.Enum, PrinterAttribute.OrientationRequestedSupported, (int)x ) ).ToArray() );
+                    if ( src.PageRangesSupported != null )
+                        dic.Add( PrinterAttribute.PageRangesSupported, new IppAttribute[] { new IppAttribute( Tag.Boolean, PrinterAttribute.PageRangesSupported, src.PageRangesSupported.Value ) } );
+
+                    /*
+                    dic.Add( "landscape-orientation-requested-preferred", new IppAttribute[] {
+                        new IppAttribute( Tag.Enum, "landscape-orientation-requested-preferred", 4 ) } );
+                    dic.Add( "print-color-mode-supported", new IppAttribute[] {
+                        new IppAttribute( Tag.Keyword, "print-color-mode-supported", "monochrome" ),
+                        new IppAttribute( Tag.Keyword, "print-color-mode-supported", "auto" ),
+                        new IppAttribute( Tag.Keyword, "print-color-mode-supported", "auto-monochrome" ),
+                        new IppAttribute( Tag.Keyword, "print-color-mode-supported", "color" )
+                    } );
+                    dic.Add( "identify-actions-default", new IppAttribute[] {
+                        new IppAttribute( Tag.Keyword, "identify-actions-default", "sound" ) } );
+                    */
+
+
                     return dic;
                 } );
         }

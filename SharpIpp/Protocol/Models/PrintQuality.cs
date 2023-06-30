@@ -12,11 +12,11 @@
         /// <summary>
         ///     normal or intermediate quality on the printer
         /// </summary>
-        Normal = 3,
+        Normal = 4,
 
         /// <summary>
         ///     highest quality available on the printer
         /// </summary>
-        High = 3,
+        High = 5,
     }
 }
