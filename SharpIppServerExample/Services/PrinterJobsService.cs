@@ -282,7 +282,6 @@ public class PrinterJobsService
             PrinterMakeAndModel = options.Name,
             PrinterName = options.Name,
             PrinterInfo = options.Name,
-            PrinterMoreInfoManufacturer = options.Name,
             IppVersionsSupported = new string[] { "1.0", "1.1" },
             DocumentFormatDefault = _documentFormatDefault,
             ColorSupported = true,
