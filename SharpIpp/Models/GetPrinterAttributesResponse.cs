@@ -207,6 +207,8 @@ namespace SharpIpp.Models
 
         public string? MediaDefault { get; set; }
 
+        public string? MediaColDefault { get; set; }
+
         public string[]? MediaSupported { get; set; }
 
         public Sides? SidesDefault { get; set; }
@@ -214,8 +216,6 @@ namespace SharpIpp.Models
         public Sides[]? SidesSupported { get; set; }
 
         public Finishings? FinishingsDefault { get; set; }
-
-        public string[]? PdfVersionsSupported { get; set; }
 
         public Resolution? PrinterResolutionDefault { get; set; }
 

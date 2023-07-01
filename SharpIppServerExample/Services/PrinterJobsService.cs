@@ -62,7 +62,7 @@ public class PrinterJobsService
             IIppRequest request = await _ippServer.ReceiveRequestAsync( inputStream );
             IIppResponseMessage response = request switch
             {
-                CancelJobRequest x => await GetCancelJobResponse(x),
+                CancelJobRequest x => await GetCancelJobResponseAsync(x),
                 CreateJobRequest x => GetCreateJobResponse(x),
                 CUPSGetPrintersRequest x => GetCUPSGetPrintersResponse(x),
                 GetJobAttributesRequest x => GetGetJobAttributesResponse(x),
@@ -316,20 +316,13 @@ public class PrinterJobsService
             UriSecuritySupported = new string[] { "none" },
             PrinterUpTime = (int)( DateTimeOffset.UtcNow - _startTime).TotalSeconds,
             MediaDefault = _mediaDefault,
+            MediaColDefault = _mediaDefault,
             MediaSupported = new string[] { _mediaDefault },
             SidesDefault = _sidesDefault,
             SidesSupported = Enum.GetValues( typeof( Sides ) ).Cast<Sides>().Where( x => x != Sides.Unsupported ).ToArray(),
             PdlOverrideSupported = "attempted",
             MultipleOperationTimeOut = 120,
             FinishingsDefault = _finishingsDefault,
-            PdfVersionsSupported = new[]
-            {
-                "adobe-1.3",
-                "adobe-1.4",
-                "adobe-1.5",
-                "adobe-1.6",
-                "iso-32000-1_2008"
-            },
             PrinterResolutionDefault = _printerResolutionDefault,
             PrinterResolutionSupported = new Resolution[] { _printerResolutionDefault },
             PrintQualityDefault = _printQualityDefault,
@@ -342,7 +335,8 @@ public class PrinterJobsService
             OrientationRequestedSupported = Enum.GetValues( typeof( Orientation ) ).Cast<Orientation>().Where( x => x != Orientation.Unsupported ).ToArray(),
             PageRangesSupported = true,
             PagesPerMinute = 20,
-            PagesPerMinuteColor = 20
+            PagesPerMinuteColor = 20,
+            PrinterMoreInfo = GetPrinterMoreInfo()
         };
     }
 
@@ -487,7 +481,7 @@ public class PrinterJobsService
         };
     }
 
-    private async Task<CancelJobResponse> GetCancelJobResponse( CancelJobRequest request )
+    private async Task<CancelJobResponse> GetCancelJobResponseAsync( CancelJobRequest request )
     {
         var jobId = GetJobId( request );
         var isCanceled = false;
@@ -576,6 +570,12 @@ public class PrinterJobsService
     {
         var request = _httpContextAccessor.HttpContext?.Request ?? throw new Exception( "Unable to access HttpContext" );
         return $"ipp://{request.Host}{request.PathBase}{request.Path}";
+    }
+
+    private string GetPrinterMoreInfo()
+    {
+        var request = _httpContextAccessor.HttpContext?.Request ?? throw new Exception( "Unable to access HttpContext" );
+        return $"{request.Scheme}://{request.Host}{request.PathBase}";
     }
 
     private int? GetJobId( IIppJobRequest request )
