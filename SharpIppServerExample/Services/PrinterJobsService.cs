@@ -32,7 +32,7 @@ public class PrinterJobsService
     private readonly Resolution _printerResolutionDefault = new( 600, 600, ResolutionUnit.DotsPerInch );
     private readonly Finishings _finishingsDefault = Finishings.None;
     private readonly PrintQuality _printQualityDefault = PrintQuality.High;
-    private readonly int _jobPriorityDefault = 50;
+    private readonly int _jobPriorityDefault = 1;
     private readonly int _copiesDefault = 1;
     private readonly Orientation _orientationRequestedDefault = Orientation.Portrait;
 
@@ -328,12 +328,12 @@ public class PrinterJobsService
             PrintQualityDefault = _printQualityDefault,
             PrintQualitySupported = new[] { _printQualityDefault },
             JobPriorityDefault = _jobPriorityDefault,
-            JobPrioritySupported = 100,
+            JobPrioritySupported = _jobPriorityDefault,
             CopiesDefault = _copiesDefault,
-            CopiesSupported = new SharpIpp.Protocol.Models.Range(1, 999),
+            CopiesSupported = new SharpIpp.Protocol.Models.Range(_copiesDefault, _copiesDefault),
             OrientationRequestedDefault = _orientationRequestedDefault,
             OrientationRequestedSupported = Enum.GetValues( typeof( Orientation ) ).Cast<Orientation>().Where( x => x != Orientation.Unsupported ).ToArray(),
-            PageRangesSupported = true,
+            PageRangesSupported = false,
             PagesPerMinute = 20,
             PagesPerMinuteColor = 20,
             PrinterMoreInfo = GetPrinterMoreInfo()
