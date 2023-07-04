@@ -98,9 +98,9 @@ namespace SharpIpp.Mapping.Profiles
                 PrinterResolution = map.MapFromDic<Resolution?>(src, JobAttribute.PrinterResolution),
                 PrintQuality = map.MapFromDic<PrintQuality?>(src, JobAttribute.PrintQuality),
                 Sides = map.MapFromDic<Sides?>(src, JobAttribute.Sides),
-                TimeAtCompleted = map.MapFromDic<DateTime?>(src, JobAttribute.TimeAtCompleted),
-                TimeAtCreation = map.MapFromDic<DateTime?>(src, JobAttribute.TimeAtCreation),
-                TimeAtProcessing = map.MapFromDic<DateTime?>(src, JobAttribute.TimeAtProcessing),
+                TimeAtCompleted = map.MapFromDic<int?>(src, JobAttribute.TimeAtCompleted),
+                TimeAtCreation = map.MapFromDic<int?>(src, JobAttribute.TimeAtCreation),
+                TimeAtProcessing = map.MapFromDic<int?>(src, JobAttribute.TimeAtProcessing),
             });
 
             mapper.CreateMap<JobAttributes, IDictionary<string, IppAttribute[]>>( ( src, map ) =>
@@ -171,11 +171,11 @@ namespace SharpIpp.Mapping.Profiles
                 if ( src.Sides != null )
                     dic.Add( JobAttribute.Sides, new IppAttribute[] { new IppAttribute( Tag.Keyword, JobAttribute.Sides, map.Map<string>( src.Sides ) ) } );
                 if ( src.TimeAtCompleted != null )
-                    dic.Add( JobAttribute.TimeAtCompleted, new IppAttribute[] { new IppAttribute( Tag.Integer, JobAttribute.TimeAtCompleted, map.Map<int>( src.TimeAtCompleted ) ) } );
+                    dic.Add( JobAttribute.TimeAtCompleted, new IppAttribute[] { new IppAttribute( Tag.Integer, JobAttribute.TimeAtCompleted, src.TimeAtCompleted.Value ) } );
                 if ( src.TimeAtCreation != null )
-                    dic.Add( JobAttribute.TimeAtCreation, new IppAttribute[] { new IppAttribute( Tag.Integer, JobAttribute.TimeAtCreation, map.Map<int>( src.TimeAtCreation ) ) } );
+                    dic.Add( JobAttribute.TimeAtCreation, new IppAttribute[] { new IppAttribute( Tag.Integer, JobAttribute.TimeAtCreation, src.TimeAtCreation.Value ) } );
                 if ( src.TimeAtProcessing != null )
-                    dic.Add( JobAttribute.TimeAtProcessing, new IppAttribute[] { new IppAttribute( Tag.Integer, JobAttribute.TimeAtProcessing, map.Map<int>( src.TimeAtProcessing ) ) } );
+                    dic.Add( JobAttribute.TimeAtProcessing, new IppAttribute[] { new IppAttribute( Tag.Integer, JobAttribute.TimeAtProcessing, src.TimeAtProcessing.Value ) } );
                 return dic;
             } );
         }

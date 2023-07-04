@@ -410,15 +410,15 @@ public class PrinterJobsService
         if ( IsRequired( JobAttribute.DateTimeAtCreation ) )
             attributes.DateTimeAtCreation = job.CreatedDateTime;
         if ( IsRequired( JobAttribute.TimeAtCreation ) )
-            attributes.TimeAtCreation = job.CreatedDateTime.UtcDateTime;
+            attributes.TimeAtCreation = (int)(job.CreatedDateTime - _startTime).TotalSeconds;
         if ( IsRequired( JobAttribute.DateTimeAtProcessing ) )
             attributes.DateTimeAtProcessing = job.ProcessingDateTime;
-        if ( IsRequired( JobAttribute.TimeAtProcessing ) )
-            attributes.TimeAtProcessing = job.ProcessingDateTime?.UtcDateTime;
+        if ( IsRequired( JobAttribute.TimeAtProcessing ) && job.ProcessingDateTime.HasValue )
+            attributes.TimeAtProcessing = (int)(job.ProcessingDateTime.Value - _startTime ).TotalSeconds;
         if ( IsRequired( JobAttribute.DateTimeAtCompleted ) )
             attributes.DateTimeAtCompleted = job.CompletedDateTime;
-        if ( IsRequired( JobAttribute.TimeAtCompleted ) )
-            attributes.TimeAtCompleted = job.CompletedDateTime?.UtcDateTime;
+        if ( IsRequired( JobAttribute.TimeAtCompleted ) && job.CompletedDateTime.HasValue )
+            attributes.TimeAtCompleted = (int)(job.CompletedDateTime.Value - _startTime ).TotalSeconds;
         if ( IsRequired( JobAttribute.Compression ) )
             attributes.Compression = documentAttributes?.Compression;
         if ( IsRequired( JobAttribute.DocumentFormat ) )

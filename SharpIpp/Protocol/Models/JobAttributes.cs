@@ -413,7 +413,7 @@ namespace SharpIpp.Protocol.Models
         /// </summary>
         /// <example>197753</example>
         /// <code>time-at-creation</code>
-        public DateTime? TimeAtCreation { get; set; }
+        public int? TimeAtCreation { get; set; }
 
         /// <summary>
         ///     This REQUIRED attribute indicates the time at which the Job object
@@ -424,7 +424,7 @@ namespace SharpIpp.Protocol.Models
         /// </summary>
         /// <example>197754</example>
         /// <code>time-at-processing</code>
-        public DateTime? TimeAtProcessing { get; set; }
+        public int? TimeAtProcessing { get; set; }
 
         /// <summary>
         ///     This REQUIRED attribute indicates the time at which the Job object
@@ -435,7 +435,7 @@ namespace SharpIpp.Protocol.Models
         /// </summary>
         /// <example>197754</example>
         /// <code>time-at-completed</code>
-        public DateTime? TimeAtCompleted { get; set; }
+        public int? TimeAtCompleted { get; set; }
 
         /// <summary>
         ///     This REQUIRED Job Description attribute indicates the amount of time
