@@ -313,7 +313,7 @@ public class PrinterJobsService
             PrintScalingSupported = new PrintScaling[] { _printScalingDefault },
             PrinterUriSupported = new string[] { GetPrinterUrl() },
             UriAuthenticationSupported = new string[] { "none" },
-            UriSecuritySupported = new string[] { "none" },
+            UriSecuritySupported = new string[] { GetUriSecuritySupported() },
             PrinterUpTime = (int)( DateTimeOffset.UtcNow - _startTime).TotalSeconds,
             MediaDefault = _mediaDefault,
             MediaColDefault = _mediaDefault,
@@ -338,6 +338,12 @@ public class PrinterJobsService
             PagesPerMinuteColor = 20,
             PrinterMoreInfo = GetPrinterMoreInfo()
         };
+    }
+
+    private string GetUriSecuritySupported()
+    {
+        var request = _httpContextAccessor.HttpContext?.Request ?? throw new Exception( "Unable to access HttpContext" );
+        return request.IsHttps ? "tls" : "none";
     }
 
     private GetJobsResponse GetGetJobsResponse( GetJobsRequest request )
