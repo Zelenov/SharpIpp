@@ -1,4 +1,5 @@
-﻿using SharpIpp.Mapping;
+﻿using SharpIpp.Exceptions;
+using SharpIpp.Mapping;
 using SharpIpp.Mapping.Profiles;
 using SharpIpp.Models;
 using SharpIpp.Protocol;
@@ -6,6 +7,7 @@ using SharpIpp.Protocol.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading;
@@ -36,6 +38,7 @@ public partial class SharpIppServer
         CancellationToken cancellationToken = default )
     {
         var request = await ReceiveRawRequestAsync( stream, cancellationToken );
+        ValidateRawRequest( request );
         return request.IppOperation switch
         {
             IppOperation.CancelJob => Mapper.Map<IIppRequestMessage, CancelJobRequest>( request ),
@@ -57,6 +60,22 @@ public partial class SharpIppServer
             IppOperation.ValidateJob => Mapper.Map<IIppRequestMessage, ValidateJobRequest>( request ),
             _ => throw new NotImplementedException( $"Unable to handle {request.IppOperation} operation" )
         };
+    }
+
+    private void ValidateRawRequest( IIppRequestMessage request )
+    {
+        if (request.RequestId <= 0)
+            throw new IppRequestException( "Bad request-id value", request, IppStatusCode.ClientErrorBadRequest );
+        if (!request.OperationAttributes.Any())
+            throw new IppRequestException( "No Operation Attributes", request, IppStatusCode.ClientErrorBadRequest );
+        if (request.OperationAttributes.FirstOrDefault()?.Name != JobAttribute.AttributesCharset)
+            throw new IppRequestException( "attributes-charset MUST be the first attribute", request, IppStatusCode.ClientErrorBadRequest );
+        if (request.OperationAttributes.Skip(1).FirstOrDefault()?.Name != JobAttribute.AttributesNaturalLanguage)
+            throw new IppRequestException( "attributes-natural-language MUST be the second attribute", request, IppStatusCode.ClientErrorBadRequest );
+        if (!System.Enum.IsDefined( typeof( IppVersion ), request.Version ))
+            throw new IppRequestException( "Unsupported IPP version", request, IppStatusCode.ServerErrorVersionNotSupported );
+        if (!request.OperationAttributes.Any(x => x.Name == JobAttribute.PrinterUri))
+            throw new IppRequestException( "No printer-uri operation attribute", request, IppStatusCode.ClientErrorBadRequest );
     }
 
     public Task SendRawResponseAsync(

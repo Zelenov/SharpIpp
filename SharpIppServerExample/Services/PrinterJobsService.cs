@@ -6,6 +6,7 @@ using SharpIppServerExample.Models;
 using SharpIpp.Models;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.Options;
+using SharpIpp.Exceptions;
 
 namespace SharpIppServerExample.Services;
 
@@ -82,6 +83,21 @@ public class PrinterJobsService
                 _ => throw new NotImplementedException()
             };
             await _ippServer.SendResponseAsync( response, outputStream );
+        }
+        catch( IppRequestException ex )
+        {
+            _logger.LogError( ex, "Unable to process request" );
+            var response = new IppResponseMessage
+            {
+                RequestId = ex.RequestMessage.RequestId,
+                Version = ex.RequestMessage.Version,
+                StatusCode = ex.StatusCode
+            };
+            var operation = new IppSection { Tag = SectionTag.OperationAttributesTag };
+            operation.Attributes.Add( new IppAttribute( Tag.Charset, JobAttribute.AttributesCharset, "utf-8" ) );
+            operation.Attributes.Add( new IppAttribute( Tag.NaturalLanguage, JobAttribute.AttributesNaturalLanguage, "en" ) );
+            response.Sections.Add( operation );
+            await _ippServer.SendRawResponseAsync( response, outputStream );
         }
         catch ( Exception ex )
         {
@@ -566,6 +582,7 @@ public class PrinterJobsService
             RequestId = request.RequestId,
             Version = request.Version,
             JobState = JobState.Pending,
+            JobStateReasons = new[] { "none" },
             StatusCode = IppStatusCode.SuccessfulOk,
             JobId = job.Id,
             JobUri = $"{GetPrinterUrl()}/{job.Id}"
