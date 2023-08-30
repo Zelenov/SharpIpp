@@ -64,8 +64,7 @@ namespace SharpIpp
             IIppRequestMessage ippRequest,
             CancellationToken cancellationToken = default)
         {
-            var httpPrinter = new UriBuilder(printer) { Scheme = "http", Port = printer.Port }.Uri;
-            var httpRequest = new HttpRequestMessage(HttpMethod.Post, httpPrinter);
+            var httpRequest = GetHttpRequestMessage( printer );
 
             HttpResponseMessage? response;
 
@@ -175,6 +174,18 @@ namespace SharpIpp
             {
                 throw new IppResponseException("Ipp attributes mapping exception", ex, ippResponse);
             }
+        }
+
+        private static HttpRequestMessage GetHttpRequestMessage( Uri printer )
+        {
+            var isSecured = printer.Scheme.Equals( "https", StringComparison.OrdinalIgnoreCase )
+                || printer.Scheme.Equals( "ipps", StringComparison.OrdinalIgnoreCase );
+            var uriBuilder = new UriBuilder( printer )
+            {
+                Scheme = isSecured ? "https" : "http",
+                Port = printer.Port == -1 ? 631 : printer.Port
+            };
+            return new HttpRequestMessage( HttpMethod.Post, uriBuilder.Uri );
         }
 
         private static IMapper MapperFactory()
