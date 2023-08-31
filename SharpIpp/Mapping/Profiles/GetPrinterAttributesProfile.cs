@@ -136,6 +136,8 @@ namespace SharpIpp.Mapping.Profiles
                     OrientationRequestedDefault = map.MapFromDic<Orientation?>( src, PrinterAttribute.OrientationRequestedDefault ),
                     OrientationRequestedSupported = map.MapFromDicSetNull<Orientation[]?>( src, PrinterAttribute.OrientationRequestedSupported ),
                     PageRangesSupported = map.MapFromDic<bool?>( src, PrinterAttribute.PageRangesSupported ),
+                    JobHoldUntilDefault = map.MapFromDic<JobHoldUntil?>( src, PrinterAttribute.JobHoldUntilDefault ),
+                    JobHoldUntilSupported = map.MapFromDicSetNull<JobHoldUntil[]?>( src, PrinterAttribute.JobHoldUntilSupported )
                 } );
 
             mapper.CreateMap<GetPrinterAttributesResponse, IDictionary<string, IppAttribute[]>>( ( src, map ) =>
@@ -214,7 +216,7 @@ namespace SharpIpp.Mapping.Profiles
                     if ( src.QueuedJobCount != null )
                         dic.Add( PrinterAttribute.QueuedJobCount, new IppAttribute[] { new IppAttribute( Tag.Integer, PrinterAttribute.QueuedJobCount, src.QueuedJobCount.Value ) } );
                     if ( src.ReferenceUriSchemesSupported?.Any() ?? false )
-                        dic.Add( PrinterAttribute.ReferenceUriSchemesSupported, src.ReferenceUriSchemesSupported.Select( x => new IppAttribute( Tag.Uri, PrinterAttribute.ReferenceUriSchemesSupported, x ) ).ToArray() );
+                        dic.Add( PrinterAttribute.ReferenceUriSchemesSupported, src.ReferenceUriSchemesSupported.Select( x => new IppAttribute( Tag.UriScheme, PrinterAttribute.ReferenceUriSchemesSupported, x ) ).ToArray() );
                     if ( src.UriAuthenticationSupported?.Any() ?? false )
                         dic.Add( PrinterAttribute.UriAuthenticationSupported, src.UriAuthenticationSupported.Select( x => new IppAttribute( Tag.Keyword, PrinterAttribute.UriAuthenticationSupported, x ) ).ToArray() );
                     if ( src.UriSecuritySupported?.Any() ?? false )
@@ -253,21 +255,10 @@ namespace SharpIpp.Mapping.Profiles
                         dic.Add( PrinterAttribute.OrientationRequestedSupported, src.OrientationRequestedSupported.Select( x => new IppAttribute( Tag.Enum, PrinterAttribute.OrientationRequestedSupported, (int)x ) ).ToArray() );
                     if ( src.PageRangesSupported != null )
                         dic.Add( PrinterAttribute.PageRangesSupported, new IppAttribute[] { new IppAttribute( Tag.Boolean, PrinterAttribute.PageRangesSupported, src.PageRangesSupported.Value ) } );
-
-                    /*
-                    dic.Add( "landscape-orientation-requested-preferred", new IppAttribute[] {
-                        new IppAttribute( Tag.Enum, "landscape-orientation-requested-preferred", 4 ) } );
-                    dic.Add( "print-color-mode-supported", new IppAttribute[] {
-                        new IppAttribute( Tag.Keyword, "print-color-mode-supported", "monochrome" ),
-                        new IppAttribute( Tag.Keyword, "print-color-mode-supported", "auto" ),
-                        new IppAttribute( Tag.Keyword, "print-color-mode-supported", "auto-monochrome" ),
-                        new IppAttribute( Tag.Keyword, "print-color-mode-supported", "color" )
-                    } );
-                    dic.Add( "identify-actions-default", new IppAttribute[] {
-                        new IppAttribute( Tag.Keyword, "identify-actions-default", "sound" ) } );
-                    */
-
-
+                    if (src.JobHoldUntilDefault != null)
+                        dic.Add( PrinterAttribute.JobHoldUntilDefault, new IppAttribute[] { new IppAttribute( Tag.Keyword, PrinterAttribute.JobHoldUntilDefault, map.Map<string>( src.JobHoldUntilDefault.Value ) ) } );
+                    if (src.JobHoldUntilSupported?.Any() ?? false)
+                        dic.Add( PrinterAttribute.JobHoldUntilSupported, src.JobHoldUntilSupported.Select( x => new IppAttribute( Tag.Keyword, PrinterAttribute.JobHoldUntilSupported, map.Map<string>( x ) ) ).ToArray() );
                     return dic;
                 } );
         }

@@ -36,6 +36,7 @@ public class PrinterJobsService
     private readonly int _jobPriorityDefault = 1;
     private readonly int _copiesDefault = 1;
     private readonly Orientation _orientationRequestedDefault = Orientation.Portrait;
+    private readonly JobHoldUntil _jobHoldUntil = JobHoldUntil.NoHold;
 
     public PrinterJobsService(
         IHttpContextAccessor httpContextAccessor,
@@ -283,26 +284,27 @@ public class PrinterJobsService
     private GetPrinterAttributesResponse GetGetPrinterAttributesResponse( GetPrinterAttributesRequest request )
     {
         var options = _options.Value;
+        bool IsRequired( string attributeName ) => request.RequestedAttributes?.Contains( attributeName ) ?? true;
         return new GetPrinterAttributesResponse
         {
             RequestId = request.RequestId,
             Version = request.Version,
             StatusCode = IppStatusCode.SuccessfulOk,
-            PrinterState = _pendingJobs.IsEmpty ? PrinterState.Idle : PrinterState.Processing,
-            PrinterStateReasons = new string[] { "none" },
-            CharsetConfigured = "utf-8",
-            CharsetSupported = new string[] { "utf-8" },
-            NaturalLanguageConfigured = "en-us",
-            GeneratedNaturalLanguageSupported = new string[] { "en-us" },
-            PrinterIsAcceptingJobs = true,
-            PrinterMakeAndModel = options.Name,
-            PrinterName = options.Name,
-            PrinterInfo = options.Name,
-            IppVersionsSupported = new string[] { "1.0", "1.1" },
-            DocumentFormatDefault = _documentFormatDefault,
-            ColorSupported = true,
-            PrinterCurrentTime = DateTimeOffset.Now,
-            OperationsSupported = new[]
+            PrinterState = !IsRequired( PrinterAttribute.PrinterState) ? null : _pendingJobs.IsEmpty ? PrinterState.Idle : PrinterState.Processing,
+            PrinterStateReasons = !IsRequired( PrinterAttribute.PrinterStateReasons) ? null : new string[] { "none" },
+            CharsetConfigured = !IsRequired( PrinterAttribute.CharsetConfigured ) ? null : "utf-8",
+            CharsetSupported = !IsRequired( PrinterAttribute.CharsetSupported) ? null :new string[] { "utf-8" },
+            NaturalLanguageConfigured = !IsRequired( PrinterAttribute.NaturalLanguageConfigured) ? null : "en-us",
+            GeneratedNaturalLanguageSupported = !IsRequired( PrinterAttribute.GeneratedNaturalLanguageSupported ) ? null : new string[] { "en-us" },
+            PrinterIsAcceptingJobs = !IsRequired( PrinterAttribute.PrinterIsAcceptingJobs) ? null : true,
+            PrinterMakeAndModel = !IsRequired( PrinterAttribute.PrinterMakeAndModel) ? null : options.Name,
+            PrinterName = !IsRequired( PrinterAttribute.PrinterName) ? null : options.Name,
+            PrinterInfo = !IsRequired( PrinterAttribute.PrinterInfo) ? null : options.Name,
+            IppVersionsSupported = !IsRequired( PrinterAttribute.IppVersionsSupported) ? null : new string[] { "1.0", "1.1" },
+            DocumentFormatDefault = !IsRequired( PrinterAttribute.DocumentFormatDefault) ? null : _documentFormatDefault,
+            ColorSupported = !IsRequired( PrinterAttribute.ColorSupported) ? null : true,
+            PrinterCurrentTime = !IsRequired( PrinterAttribute.PrinterCurrentTime) ? null : DateTimeOffset.Now,
+            OperationsSupported = !IsRequired( PrinterAttribute.OperationsSupported) ? null : new[]
             {
                 IppOperation.PrintJob,
                 IppOperation.PrintUri,
@@ -320,39 +322,42 @@ public class PrinterJobsService
                 IppOperation.PausePrinter,
                 IppOperation.ResumePrinter
             },
-            QueuedJobCount = _pendingJobs.Count,
-            DocumentFormatSupported = new string[] { _documentFormatDefault },
-            MultipleDocumentJobsSupported = true,
-            CompressionSupported = new Compression[] { Compression.None },
-            PrinterLocation = "Internet",
-            PrintScalingDefault = _printScalingDefault,
-            PrintScalingSupported = new PrintScaling[] { _printScalingDefault },
-            PrinterUriSupported = new string[] { GetPrinterUrl() },
-            UriAuthenticationSupported = new string[] { "none" },
-            UriSecuritySupported = new string[] { GetUriSecuritySupported() },
-            PrinterUpTime = (int)( DateTimeOffset.UtcNow - _startTime).TotalSeconds,
-            MediaDefault = _mediaDefault,
-            MediaColDefault = _mediaDefault,
-            MediaSupported = new string[] { _mediaDefault },
-            SidesDefault = _sidesDefault,
-            SidesSupported = Enum.GetValues( typeof( Sides ) ).Cast<Sides>().Where( x => x != Sides.Unsupported ).ToArray(),
-            PdlOverrideSupported = "attempted",
-            MultipleOperationTimeOut = 120,
-            FinishingsDefault = _finishingsDefault,
-            PrinterResolutionDefault = _printerResolutionDefault,
-            PrinterResolutionSupported = new Resolution[] { _printerResolutionDefault },
-            PrintQualityDefault = _printQualityDefault,
-            PrintQualitySupported = new[] { _printQualityDefault },
-            JobPriorityDefault = _jobPriorityDefault,
-            JobPrioritySupported = _jobPriorityDefault,
-            CopiesDefault = _copiesDefault,
-            CopiesSupported = new SharpIpp.Protocol.Models.Range(_copiesDefault, _copiesDefault),
-            OrientationRequestedDefault = _orientationRequestedDefault,
-            OrientationRequestedSupported = Enum.GetValues( typeof( Orientation ) ).Cast<Orientation>().Where( x => x != Orientation.Unsupported ).ToArray(),
-            PageRangesSupported = false,
-            PagesPerMinute = 20,
-            PagesPerMinuteColor = 20,
-            PrinterMoreInfo = GetPrinterMoreInfo()
+            QueuedJobCount = !IsRequired( PrinterAttribute.QueuedJobCount) ? null : _pendingJobs.Count,
+            DocumentFormatSupported = !IsRequired( PrinterAttribute.DocumentFormatSupported) ? null : new string[] { _documentFormatDefault },
+            MultipleDocumentJobsSupported = !IsRequired( PrinterAttribute.MultipleDocumentJobsSupported) ? null : true,
+            CompressionSupported = !IsRequired( PrinterAttribute.CompressionSupported) ? null : new Compression[] { Compression.None },
+            PrinterLocation = !IsRequired( PrinterAttribute.PrinterLocation) ? null : "Internet",
+            PrintScalingDefault = !IsRequired( PrinterAttribute.PrintScalingDefault) ? null : _printScalingDefault,
+            PrintScalingSupported = !IsRequired( PrinterAttribute.PrintScalingSupported) ? null : new PrintScaling[] { _printScalingDefault },
+            PrinterUriSupported = !IsRequired( PrinterAttribute.PrinterUriSupported) ? null : new string[] { GetPrinterUrl() },
+            UriAuthenticationSupported = !IsRequired( PrinterAttribute.UriAuthenticationSupported) ? null : new string[] { "none" },
+            UriSecuritySupported = !IsRequired( PrinterAttribute.UriSecuritySupported) ? null : new string[] { GetUriSecuritySupported() },
+            PrinterUpTime = !IsRequired( PrinterAttribute.PrinterUpTime) ? null : (int)(DateTimeOffset.UtcNow - _startTime).TotalSeconds,
+            MediaDefault = !IsRequired( PrinterAttribute.MediaDefault) ? null : _mediaDefault,
+            MediaColDefault = !IsRequired( PrinterAttribute.MediaDefault) ? null : _mediaDefault,
+            MediaSupported = !IsRequired( PrinterAttribute.MediaSupported) ? null : new string[] { _mediaDefault },
+            SidesDefault = !IsRequired( PrinterAttribute.SidesDefault) ? null : _sidesDefault,
+            SidesSupported = !IsRequired( PrinterAttribute.SidesSupported) ? null : Enum.GetValues( typeof( Sides ) ).Cast<Sides>().Where( x => x != Sides.Unsupported ).ToArray(),
+            PdlOverrideSupported = !IsRequired( PrinterAttribute.PdlOverrideSupported) ? null : "attempted",
+            MultipleOperationTimeOut = !IsRequired( PrinterAttribute.MultipleOperationTimeOut ) ? null : 120,
+            FinishingsDefault = !IsRequired( PrinterAttribute.FinishingsDefault) ? null : _finishingsDefault,
+            PrinterResolutionDefault = !IsRequired( PrinterAttribute.PrinterResolutionDefault) ? null : _printerResolutionDefault,
+            PrinterResolutionSupported = !IsRequired( PrinterAttribute.PrinterResolutionSupported) ? null : new Resolution[] { _printerResolutionDefault },
+            PrintQualityDefault = !IsRequired( PrinterAttribute.PrintQualityDefault) ? null : _printQualityDefault,
+            PrintQualitySupported = !IsRequired( PrinterAttribute.PrintQualitySupported ) ? null : new[] { _printQualityDefault },
+            JobPriorityDefault = !IsRequired( PrinterAttribute.JobPriorityDefault ) ? null : _jobPriorityDefault,
+            JobPrioritySupported = !IsRequired( PrinterAttribute.JobPrioritySupported ) ? null : _jobPriorityDefault,
+            CopiesDefault = !IsRequired( PrinterAttribute.CopiesDefault ) ? null : _copiesDefault,
+            CopiesSupported = !IsRequired( PrinterAttribute.CopiesSupported ) ? null : new SharpIpp.Protocol.Models.Range( _copiesDefault, _copiesDefault ),
+            OrientationRequestedDefault = !IsRequired( PrinterAttribute.OrientationRequestedDefault ) ? null : _orientationRequestedDefault,
+            OrientationRequestedSupported = !IsRequired( PrinterAttribute.OrientationRequestedSupported ) ? null : Enum.GetValues( typeof( Orientation ) ).Cast<Orientation>().Where( x => x != Orientation.Unsupported ).ToArray(),
+            PageRangesSupported = !IsRequired( PrinterAttribute.PageRangesSupported) ? null : false,
+            PagesPerMinute = !IsRequired( PrinterAttribute.PagesPerMinute ) ? null : 20,
+            PagesPerMinuteColor = !IsRequired( PrinterAttribute.PagesPerMinuteColor ) ? null : 20,
+            PrinterMoreInfo = !IsRequired( PrinterAttribute.PrinterMoreInfo ) ? null : GetPrinterMoreInfo(),
+            JobHoldUntilSupported = !IsRequired( PrinterAttribute.JobHoldUntilSupported ) ? null : new[] { JobHoldUntil.NoHold },
+            JobHoldUntilDefault = !IsRequired( PrinterAttribute.JobHoldUntilDefault ) ? null : JobHoldUntil.NoHold,
+            ReferenceUriSchemesSupported = !IsRequired( PrinterAttribute.ReferenceUriSchemesSupported ) ? null : new[] { "ftp" },
         };
     }
 
@@ -671,6 +676,7 @@ public class PrinterJobsService
         attributes.JobPriority ??= _jobPriorityDefault;
         attributes.Copies ??= _copiesDefault;
         attributes.OrientationRequested ??= _orientationRequestedDefault;
+        attributes.JobHoldUntil ??= _jobHoldUntil;
     }
 
     private void FillWithDefaultValues(DocumentAttributes attributes)

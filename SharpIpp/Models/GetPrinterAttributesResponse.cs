@@ -238,5 +238,7 @@ namespace SharpIpp.Models
         public Orientation[]? OrientationRequestedSupported { get; set; }
 
         public bool? PageRangesSupported { get; set; }
+        public JobHoldUntil[]? JobHoldUntilSupported { get; set; }
+        public JobHoldUntil? JobHoldUntilDefault { get; set; }
     }
 }

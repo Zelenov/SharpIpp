@@ -58,5 +58,7 @@
         public const string OrientationRequestedDefault = "orientation-requested-default";
         public const string OrientationRequestedSupported = "orientation-requested-supported";
         public const string PageRangesSupported = "page-ranges-supported";
+        public const string JobHoldUntilDefault = "job-hold-until-default";
+        public const string JobHoldUntilSupported = "job-hold-until-supported";
     }
 }

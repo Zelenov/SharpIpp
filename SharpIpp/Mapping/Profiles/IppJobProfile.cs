@@ -42,7 +42,7 @@ namespace SharpIpp.Mapping.Profiles
                     dst.JobUrl = jobUri;
                 if ( Uri.TryCreate( src.OperationAttributes.FirstOrDefault( x => x.Name == JobAttribute.PrinterUri )?.Value as string, UriKind.RelativeOrAbsolute, out Uri printerUri ) )
                     dst.PrinterUri = printerUri;
-                dst.JobId = src.OperationAttributes.FirstOrDefault( x => x.Name == JobAttribute.PrinterUri )?.Value as int?;
+                dst.JobId = src.OperationAttributes.FirstOrDefault( x => x.Name == JobAttribute.JobId )?.Value as int?;
                 return dst;
             } );
 
