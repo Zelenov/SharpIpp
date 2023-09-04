@@ -84,7 +84,7 @@ namespace SharpIpp.Mapping.Profiles
                 JobOriginatingUserName = map.MapFromDic<string?>(src, JobAttribute.JobOriginatingUserName),
                 JobOriginatingUserNameLanguage =
                     map.MapFromDicLanguage(src, JobAttribute.JobOriginatingUserNameLanguage),
-                JobPrinterUpTime = map.MapFromDic<DateTime?>(src, JobAttribute.JobPrinterUpTime),
+                JobPrinterUpTime = map.MapFromDic<int?>(src, JobAttribute.JobPrinterUpTime),
                 JobPrinterUri = map.MapFromDic<string?>(src, JobAttribute.JobPrinterUri),
                 JobSheets = map.MapFromDic<JobSheets?>(src, JobAttribute.JobSheets),
                 JobState = map.MapFromDic<JobState?>(src, JobAttribute.JobState),
@@ -145,7 +145,7 @@ namespace SharpIpp.Mapping.Profiles
                 if ( src.JobOriginatingUserNameLanguage != null )
                     dic.Add( JobAttribute.JobOriginatingUserNameLanguage, new IppAttribute[] { new IppAttribute( Tag.NaturalLanguage, JobAttribute.JobOriginatingUserNameLanguage, src.JobOriginatingUserNameLanguage ) } );
                 if ( src.JobPrinterUpTime != null )
-                    dic.Add( JobAttribute.JobPrinterUpTime, new IppAttribute[] { new IppAttribute( Tag.DateTime, JobAttribute.JobPrinterUpTime, src.JobPrinterUpTime.Value ) } );
+                    dic.Add( JobAttribute.JobPrinterUpTime, new IppAttribute[] { new IppAttribute( Tag.Integer, JobAttribute.JobPrinterUpTime, src.JobPrinterUpTime.Value ) } );
                 if ( src.JobPrinterUri != null )
                     dic.Add( JobAttribute.JobPrinterUri, new IppAttribute[] { new IppAttribute( Tag.Uri, JobAttribute.JobPrinterUri, src.JobPrinterUri ) } );
                 if ( src.JobSheets != null )
@@ -154,10 +154,10 @@ namespace SharpIpp.Mapping.Profiles
                     dic.Add( JobAttribute.JobState, new IppAttribute[] { new IppAttribute( Tag.Enum, JobAttribute.JobState, (int)src.JobState.Value ) } );
                 if ( src.JobStateMessage != null )
                     dic.Add( JobAttribute.JobStateMessage, new IppAttribute[] { new IppAttribute( Tag.TextWithoutLanguage, JobAttribute.JobStateMessage, src.JobStateMessage ) } );
-                if ( src.JobStateReasons != null )
-                    dic.Add( JobAttribute.JobStateReasons, new IppAttribute[] { new IppAttribute( Tag.Keyword, JobAttribute.JobStateReasons, map.Map<string>( src.JobStateReasons ) ) } );
+                if (src.JobStateReasons?.Any() ?? false)
+                    dic.Add( JobAttribute.JobStateReasons, src.JobStateReasons.Select( x => new IppAttribute( Tag.Keyword, JobAttribute.JobStateReasons, x ) ).ToArray() );
                 if ( src.Media != null )
-                    dic.Add( JobAttribute.Media, new IppAttribute[] { new IppAttribute( Tag.Keyword, JobAttribute.JobStateReasons, src.Media ) } );
+                    dic.Add( JobAttribute.Media, new IppAttribute[] { new IppAttribute( Tag.Keyword, JobAttribute.Media, src.Media ) } );
                 if ( src.MultipleDocumentHandling != null )
                     dic.Add( JobAttribute.MultipleDocumentHandling, new IppAttribute[] { new IppAttribute( Tag.Keyword, JobAttribute.MultipleDocumentHandling, map.Map<string>( src.MultipleDocumentHandling ) ) } );
                 if ( src.NumberUp != null )

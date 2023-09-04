@@ -51,13 +51,13 @@ namespace SharpIppServerExample.Services
                             break;
                     }
                 }
-                await _printerJobService.AddCompletedJobAsync( job );
+                await _printerJobService.AddCompletedJobAsync( job.Id );
                 _logger.LogDebug( "Job {id} has been finished", job.Id );
             }
             catch ( Exception ex )
             {
                 _logger.LogError( ex, "Unable to finish job" );
-                await _printerJobService.AddFailedJobAsync( job );
+                await _printerJobService.AddFailedJobAsync( job.Id );
             }
         }
 

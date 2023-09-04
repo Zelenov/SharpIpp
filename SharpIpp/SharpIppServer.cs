@@ -58,7 +58,7 @@ public partial class SharpIppServer
             IppOperation.SendDocument => Mapper.Map<IIppRequestMessage, SendDocumentRequest>( request ),
             IppOperation.SendUri => Mapper.Map<IIppRequestMessage, SendUriRequest>( request ),
             IppOperation.ValidateJob => Mapper.Map<IIppRequestMessage, ValidateJobRequest>( request ),
-            _ => throw new NotImplementedException( $"Unable to handle {request.IppOperation} operation" )
+            _ => throw new IppRequestException( $"Unable to handle {request.IppOperation} operation", request, IppStatusCode.ClientErrorBadRequest )
         };
     }
 

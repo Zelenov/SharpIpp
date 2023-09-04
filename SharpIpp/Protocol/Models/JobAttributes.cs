@@ -446,6 +446,6 @@ namespace SharpIpp.Protocol.Models
         /// </summary>
         /// <example>197775</example>
         /// <code>job-printer-up-time</code>
-        public DateTime? JobPrinterUpTime { get; set; }
+        public int? JobPrinterUpTime { get; set; }
     }
 }

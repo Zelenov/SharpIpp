@@ -21,6 +21,7 @@ public class PrinterJobsService
     private bool _isPaused;
     private readonly ConcurrentDictionary<int, PrinterJob> _createdJobs = new();
     private readonly ConcurrentDictionary<int, PrinterJob> _pendingJobs = new();
+    private readonly ConcurrentDictionary<int, PrinterJob> _processingJobs = new();
     private readonly ConcurrentDictionary<int, PrinterJob> _failedJobs = new();
     private readonly ConcurrentDictionary<int, PrinterJob> _suspendedJobs = new();
     private readonly ConcurrentDictionary<int, PrinterJob> _canceledJobs = new();
@@ -374,7 +375,7 @@ public class PrinterJobsService
             !request.WhichJobs.HasValue || request.WhichJobs.Value == WhichJobs.Completed,
             ( request.MyJobs ?? false ) ? request.RequestingUserName : null,
             request.Limit ?? int.MaxValue )
-            .Select( x => GetJobAttributes( x.Job, x.JobState, request.RequestedAttributes ) )
+            .Select( x => GetJobAttributes( x.Job, x.JobState, request.RequestedAttributes, true ) )
             .ToArray();
         return new GetJobsResponse
         {
@@ -389,7 +390,7 @@ public class PrinterJobsService
     {
         var jobId = GetJobId( request );
         var (job, jobState) = jobId.HasValue ? GetJob( jobId.Value ) : (null, JobState.Aborted);
-        var jobAttributes = job != null ? GetJobAttributes( job, jobState, request.RequestedAttributes ) : null;
+        var jobAttributes = job != null ? GetJobAttributes( job, jobState, request.RequestedAttributes, false ) : null;
         return new GetJobAttributesResponse
         {
             RequestId = request.RequestId,
@@ -399,7 +400,7 @@ public class PrinterJobsService
         };
     }
 
-    private JobAttributes GetJobAttributes(PrinterJob job, JobState jobState, string[]? requestedAttributes)
+    private JobAttributes GetJobAttributes(PrinterJob job, JobState jobState, string[]? requestedAttributes, bool isBatch )
     {
         var jobAttributes = job.Requests.Select( x => x switch
         {
@@ -425,57 +426,37 @@ public class PrinterJobsService
             SendUriRequest sendUriRequest => sendUriRequest.RequestingUserName,
             _ => null,
         } ).FirstOrDefault( x => x != null );
-        bool IsRequired( string attributeName ) => requestedAttributes?.Contains( attributeName ) ?? true;
+        bool IsRequired( string attributeName ) => (requestedAttributes?.Contains( "all" ) ?? false) || (requestedAttributes?.Contains( attributeName ) ?? !isBatch);
         var attributes = new JobAttributes
         {
             JobId = job.Id,
             JobUri = $"{GetPrinterUrl()}/{job.Id}",
-            JobPrinterUri = GetPrinterUrl()
+            JobPrinterUri = !IsRequired( JobAttribute.JobPrinterUri ) ? null : GetPrinterUrl(),
+            JobState = !IsRequired( JobAttribute.JobState ) ? null : jobState,
+            JobStateReasons = !IsRequired( JobAttribute.JobState ) ? null : new[] { "none" },
+            DateTimeAtCreation = !IsRequired( JobAttribute.DateTimeAtCreation ) ? null : job.CreatedDateTime,
+            TimeAtCreation = !IsRequired( JobAttribute.TimeAtCreation ) ? null : (int)(job.CreatedDateTime - _startTime).TotalSeconds,
+            DateTimeAtProcessing = !IsRequired( JobAttribute.DateTimeAtProcessing ) ? null : job.ProcessingDateTime,
+            TimeAtProcessing = !IsRequired( JobAttribute.TimeAtProcessing ) || !job.ProcessingDateTime.HasValue ? null : (int)(job.ProcessingDateTime.Value - _startTime).TotalSeconds,
+            DateTimeAtCompleted = !IsRequired( JobAttribute.DateTimeAtCompleted ) ? null : job.CompletedDateTime,
+            TimeAtCompleted = !IsRequired( JobAttribute.TimeAtCompleted ) || !job.CompletedDateTime.HasValue ? null : (int)(job.CompletedDateTime.Value - _startTime).TotalSeconds,
+            Compression = !IsRequired( JobAttribute.Compression ) ? null : documentAttributes?.Compression,
+            DocumentFormat = !IsRequired( JobAttribute.DocumentFormat ) ? null : documentAttributes?.DocumentFormat,
+            DocumentName = !IsRequired( JobAttribute.DocumentName ) ? null : documentAttributes?.DocumentName,
+            Copies = !IsRequired( JobAttribute.Copies ) ? null : jobAttributes?.Copies,
+            Finishings = !IsRequired( JobAttribute.Finishings ) ? null : jobAttributes?.Finishings,
+            IppAttributeFidelity = !IsRequired( JobAttribute.IppAttributeFidelity ) ? null : jobAttributes?.IppAttributeFidelity,
+            JobName = !IsRequired( JobAttribute.JobName ) ? null : jobAttributes?.JobName,
+            JobOriginatingUserName = !IsRequired( JobAttribute.JobOriginatingUserName ) ? null : userName,
+            MultipleDocumentHandling = !IsRequired( JobAttribute.MultipleDocumentHandling ) ? null : jobAttributes?.MultipleDocumentHandling,
+            NumberUp = !IsRequired( JobAttribute.NumberUp ) ? null : jobAttributes?.NumberUp,
+            OrientationRequested = !IsRequired( JobAttribute.OrientationRequested ) ? null : jobAttributes?.OrientationRequested,
+            PrinterResolution = !IsRequired( JobAttribute.PrinterResolution ) ? null : jobAttributes?.PrinterResolution,
+            Media = !IsRequired( JobAttribute.Media ) ? null : jobAttributes?.Media,
+            PrintQuality = !IsRequired( JobAttribute.PrintQuality ) ? null : jobAttributes?.PrintQuality,
+            Sides = !IsRequired( JobAttribute.Sides ) ? null : jobAttributes?.Sides,
+            JobPrinterUpTime = !IsRequired( JobAttribute.JobPrinterUpTime ) ? null : (int)(DateTimeOffset.UtcNow - _startTime).TotalSeconds,
         };
-        if ( IsRequired( JobAttribute.JobState ) )
-            attributes.JobState = jobState;
-        if ( IsRequired( JobAttribute.DateTimeAtCreation ) )
-            attributes.DateTimeAtCreation = job.CreatedDateTime;
-        if ( IsRequired( JobAttribute.TimeAtCreation ) )
-            attributes.TimeAtCreation = (int)(job.CreatedDateTime - _startTime).TotalSeconds;
-        if ( IsRequired( JobAttribute.DateTimeAtProcessing ) )
-            attributes.DateTimeAtProcessing = job.ProcessingDateTime;
-        if ( IsRequired( JobAttribute.TimeAtProcessing ) && job.ProcessingDateTime.HasValue )
-            attributes.TimeAtProcessing = (int)(job.ProcessingDateTime.Value - _startTime ).TotalSeconds;
-        if ( IsRequired( JobAttribute.DateTimeAtCompleted ) )
-            attributes.DateTimeAtCompleted = job.CompletedDateTime;
-        if ( IsRequired( JobAttribute.TimeAtCompleted ) && job.CompletedDateTime.HasValue )
-            attributes.TimeAtCompleted = (int)(job.CompletedDateTime.Value - _startTime ).TotalSeconds;
-        if ( IsRequired( JobAttribute.Compression ) )
-            attributes.Compression = documentAttributes?.Compression;
-        if ( IsRequired( JobAttribute.DocumentFormat ) )
-            attributes.DocumentFormat = documentAttributes?.DocumentFormat;
-        if ( IsRequired( JobAttribute.DocumentName ) )
-            attributes.DocumentName = documentAttributes?.DocumentName;
-        if ( IsRequired( JobAttribute.Copies ) )
-            attributes.Copies = jobAttributes?.Copies;
-        if ( IsRequired( JobAttribute.Finishings ) )
-            attributes.Finishings = jobAttributes?.Finishings;
-        if ( IsRequired( JobAttribute.IppAttributeFidelity ) )
-            attributes.IppAttributeFidelity = jobAttributes?.IppAttributeFidelity;
-        if ( IsRequired( JobAttribute.JobName ) )
-            attributes.JobName = jobAttributes?.JobName;
-        if ( IsRequired( JobAttribute.JobOriginatingUserName ) )
-            attributes.JobOriginatingUserName = userName;
-        if ( IsRequired( JobAttribute.MultipleDocumentHandling ) )
-            attributes.MultipleDocumentHandling = jobAttributes?.MultipleDocumentHandling;
-        if ( IsRequired( JobAttribute.NumberUp ) )
-            attributes.NumberUp = jobAttributes?.NumberUp;
-        if ( IsRequired( JobAttribute.OrientationRequested ) )
-            attributes.OrientationRequested = jobAttributes?.OrientationRequested;
-        if ( IsRequired( JobAttribute.PrinterResolution ) )
-            attributes.PrinterResolution = jobAttributes?.PrinterResolution;
-        if ( IsRequired( JobAttribute.Media ) )
-            attributes.Media = jobAttributes?.Media;
-        if ( IsRequired( JobAttribute.PrintQuality ) )
-            attributes.PrintQuality = jobAttributes?.PrintQuality;
-        if ( IsRequired( JobAttribute.Sides ) )
-            attributes.Sides = jobAttributes?.Sides;
         return attributes;
     }
 
@@ -503,6 +484,7 @@ public class PrinterJobsService
             Version = request.Version,
             JobState = JobState.Pending,
             StatusCode = IppStatusCode.SuccessfulOk,
+            JobStateReasons = new[] { "none" },
             JobId = job.Id,
             JobUri = $"{GetPrinterUrl()}/{job.Id}"
         };
@@ -517,6 +499,8 @@ public class PrinterJobsService
             || _pendingJobs.TryRemove( jobId.Value, out job )
             || _suspendedJobs.TryRemove( jobId.Value, out job ) ))
         {
+            job.ProcessingDateTime = DateTimeOffset.UtcNow;
+            job.CompletedDateTime = DateTimeOffset.UtcNow;
             _canceledJobs.TryAdd( job.Id, job );
             foreach ( var ippRequest in job.Requests )
             {
@@ -555,20 +539,27 @@ public class PrinterJobsService
                 return Task.FromResult<PrinterJob?>( null );
             if ( _pendingJobs.TryRemove( keys.OrderBy( x => x ).Min(), out PrinterJob? job ) )
             {
+                job.ProcessingDateTime = DateTimeOffset.UtcNow;
+                _processingJobs.TryAdd( job.Id, job );
                 return Task.FromResult<PrinterJob?>( job );
             }
         }
     }
 
-    public Task AddCompletedJobAsync( PrinterJob job )
+    public Task AddCompletedJobAsync( int jobId )
     {
-        _completedJobs.TryAdd( job.Id, job );
+        if (_processingJobs.TryRemove( jobId, out PrinterJob? job ))
+        {
+            job.CompletedDateTime = DateTimeOffset.UtcNow;
+            _completedJobs.TryAdd( job.Id, job );
+        }
         return Task.CompletedTask;
     }
 
-    public Task AddFailedJobAsync( PrinterJob job )
+    public Task AddFailedJobAsync( int jobId )
     {
-        _failedJobs.TryAdd( job.Id, job );
+        if (_processingJobs.TryRemove( jobId, out PrinterJob? job ))
+            _failedJobs.TryAdd( job.Id, job );
         return Task.CompletedTask;
     }
 
@@ -633,20 +624,15 @@ public class PrinterJobsService
     {
         var list = new List<(PrinterJob Job, JobState JobState)>();
         if ( returnNotCompleted )
-            list.AddRange( _createdJobs.Values
+            list.AddRange( _pendingJobs.Values
                 .Where( x => userName == null || x.UserName == userName )
                 .Take( limit - list.Count )
                 .Select( x => (x, JobState.Pending) ) );
         if( returnNotCompleted && list.Count < limit )
-            list.AddRange( _createdJobs.Values
+            list.AddRange( _processingJobs.Values
                 .Where( x => userName == null || x.UserName == userName )
                 .Take( limit - list.Count )
-                .Select( x => (x, JobState.Pending) ) );
-        if ( returnNotCompleted && list.Count < limit )
-            list.AddRange( _suspendedJobs.Values
-                .Where( x => userName == null || x.UserName == userName )
-                .Take( limit - list.Count )
-                .Select( x => (x, JobState.PendingHeld) ) );
+                .Select( x => (x, JobState.Processing) ) );
         if ( returnCompleted && list.Count < limit )
             list.AddRange( _completedJobs.Values
                 .Where( x => userName == null || x.UserName == userName )
@@ -681,6 +667,7 @@ public class PrinterJobsService
 
     private void FillWithDefaultValues(DocumentAttributes attributes)
     {
-        attributes.DocumentFormat ??= _documentFormatDefault;
+        if (string.IsNullOrEmpty( attributes.DocumentFormat ))
+            attributes.DocumentFormat = _documentFormatDefault;
     }
 }

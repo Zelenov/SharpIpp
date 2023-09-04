@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using SharpIpp.Exceptions;
 using SharpIpp.Models;
 using SharpIpp.Protocol;
 using SharpIpp.Protocol.Models;
@@ -41,7 +42,10 @@ namespace SharpIpp.Mapping.Profiles
                     DocumentAttributes = new DocumentAttributes()
                 };
                 map.Map<IIppRequestMessage, IIppJobRequest>( src, dst );
-                dst.LastDocument = src.OperationAttributes.FirstOrDefault( x => x.Name == JobAttribute.LastDocument )?.Value as bool? ?? false;
+                var lastDocument = src.OperationAttributes.FirstOrDefault( x => x.Name == JobAttribute.LastDocument )?.Value as bool?;
+                if (!lastDocument.HasValue)
+                    throw new IppRequestException( "missing last-document", src, IppStatusCode.ClientErrorBadRequest );
+                dst.LastDocument = lastDocument.Value;
                 map.Map( src, dst.DocumentAttributes );
                 return dst;
             } );

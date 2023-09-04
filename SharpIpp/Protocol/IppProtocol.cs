@@ -365,20 +365,15 @@ namespace SharpIpp.Protocol
         public void WriteSection( IIppResponseMessage responseMessage, BinaryWriter writer )
         {
             IppAttribute? prevAttribute = null;
-            SectionTag? prevTag = null;
             foreach ( var ippSection in responseMessage.Sections )
             {
-                if ( prevTag == null || ippSection.Tag != prevTag )
-                {
-                    writer.Write( (byte)ippSection.Tag );
-                }
+                writer.Write( (byte)ippSection.Tag );
                 foreach(var ippAttribute in ippSection.Attributes )
                 {
                     var isSet = prevAttribute != null && ippAttribute.Name == prevAttribute.Name;
                     Write( writer, ippAttribute, isSet );
                     prevAttribute = ippAttribute;
                 }
-                prevTag = ippSection.Tag;
             }
             //end-of-attributes-tag https://tools.ietf.org/html/rfc8010#section-3.5.1
             writer.Write( (byte)SectionTag.EndOfAttributesTag );

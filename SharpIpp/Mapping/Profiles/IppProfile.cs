@@ -49,6 +49,7 @@ namespace SharpIpp.Mapping.Profiles
             {
                 dst.Version = src.Version;
                 dst.RequestId = src.RequestId;
+                dst.StatusCode = src.StatusCode;
                 if ( !src.Sections.Any( x => x.Tag == SectionTag.OperationAttributesTag ) )
                 {
                     var section = new IppSection { Tag = SectionTag.OperationAttributesTag };

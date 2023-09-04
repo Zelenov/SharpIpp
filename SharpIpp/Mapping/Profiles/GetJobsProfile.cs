@@ -73,8 +73,8 @@ namespace SharpIpp.Mapping.Profiles
             mapper.CreateMap<GetJobsResponse, IppResponseMessage>((src, map) =>
             {
                 var dst = new IppResponseMessage();
+                map.Map<IIppResponseMessage, IppResponseMessage>( src, dst );
                 dst.Sections.AddRange(map.Map<JobAttributes[], List<IppSection>>(src.Jobs));
-                map.Map<IIppResponseMessage, IppResponseMessage>(src, dst);
                 return dst;
             } );
 
