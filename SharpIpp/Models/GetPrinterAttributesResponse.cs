@@ -16,12 +16,12 @@ namespace SharpIpp.Models
         /// <summary>
         ///     uri-security-supported
         /// </summary>
-        public string[]? UriSecuritySupported { get; set; }
+        public UriSecurity[]? UriSecuritySupported { get; set; }
 
         /// <summary>
         ///     uri-authentication-supported
         /// </summary>
-        public string[]? UriAuthenticationSupported { get; set; }
+        public UriAuthentication[]? UriAuthenticationSupported { get; set; }
 
         /// <summary>
         ///     printer-name
@@ -141,7 +141,7 @@ namespace SharpIpp.Models
         /// <summary>
         ///     reference-uri-schemes-supported
         /// </summary>
-        public string[]? ReferenceUriSchemesSupported { get; set; }
+        public UriScheme[]? ReferenceUriSchemesSupported { get; set; }
 
         /// <summary>
         ///     pdl-override-supported

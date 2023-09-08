@@ -376,7 +376,7 @@ namespace SharpIpp.Protocol.Models
         /// </summary>
         /// <example>job-completed-successfully</example>
         /// <code>job-state-reasons</code>
-        public string[]? JobStateReasons { get; set; }
+        public JobStateReason[]? JobStateReasons { get; set; }
 
         /// <summary>
         ///     This attribute indicates the date and time at which the Job object

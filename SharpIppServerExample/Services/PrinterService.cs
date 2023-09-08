@@ -13,17 +13,14 @@ namespace SharpIppServerExample.Services
     {
         private readonly PrinterJobsService _printerJobService;
         private readonly IWebHostEnvironment _env;
-        private readonly ILogger<PrinterService> _logger;
         private readonly FileExtensionContentTypeProvider _contentTypeProvider;
 
         public PrinterService(
             PrinterJobsService printerService,
-            IWebHostEnvironment env,
-            ILogger<PrinterService> logger)
+            IWebHostEnvironment env)
         {
             _printerJobService = printerService;
             _env = env;
-            _logger = logger;
             _contentTypeProvider = new FileExtensionContentTypeProvider();
             Directory.CreateDirectory( Path.Combine( _env.ContentRootPath, "jobs" ) );
         }
@@ -52,12 +49,10 @@ namespace SharpIppServerExample.Services
                     }
                 }
                 await _printerJobService.AddCompletedJobAsync( job.Id );
-                _logger.LogDebug( "Job {id} has been finished", job.Id );
             }
             catch ( Exception ex )
             {
-                _logger.LogError( ex, "Unable to finish job" );
-                await _printerJobService.AddFailedJobAsync( job.Id );
+                await _printerJobService.AddAbortedJobAsync( job.Id );
             }
         }
 

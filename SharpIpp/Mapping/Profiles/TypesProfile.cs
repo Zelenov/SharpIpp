@@ -1,5 +1,5 @@
 ﻿using System;
-
+using System.Linq;
 using SharpIpp.Protocol.Models;
 
 namespace SharpIpp.Mapping.Profiles
@@ -35,159 +35,35 @@ namespace SharpIpp.Mapping.Profiles
             mapper.CreateIppMap<StringWithLanguage, string>((src, map) => src.Value);
             mapper.CreateIppMap<string, StringWithLanguage?>((src, map) => null);
 
-
-            ConfigureJobHoldUntil(mapper);
-            ConfigureMultipleDocumentHandling(mapper);
-            ConfigureSides(mapper);
-            ConfigureJobSheets(mapper);
-            ConfigureCompression(mapper);
-            ConfigurePrintScaling(mapper);
-            ConfigureWhichJobs(mapper);
+            ConfigureKeyword( mapper, JobHoldUntil.Unsupported );
+            ConfigureKeyword( mapper, MultipleDocumentHandling.Unsupported );
+            ConfigureKeyword( mapper, Sides.Unsupported );
+            ConfigureKeyword( mapper, JobSheets.Unsupported );
+            ConfigureKeyword( mapper, Compression.Unsupported );
+            ConfigureKeyword( mapper, PrintScaling.Unsupported );
+            ConfigureKeyword( mapper, WhichJobs.Unsupported );
+            ConfigureKeyword( mapper, JobStateReason.Unsupported );
+            ConfigureKeyword( mapper, UriScheme.Unsupported );
+            ConfigureKeyword( mapper, UriAuthentication.Unsupported );
+            ConfigureKeyword( mapper, UriSecurity.Unsupported );
         }
 
-        private void ConfigureJobHoldUntil(IMapperConstructor map)
+        private string ConvertDashToCamelCase( string input )
         {
-            map.CreateIppMap<string, JobHoldUntil>((src, ctx) => src switch
-            {
-                "no-hold" => JobHoldUntil.NoHold,
-                "indefinite" => JobHoldUntil.Indefinite,
-                "day-time" => JobHoldUntil.DayTime,
-                "evening" => JobHoldUntil.Evening,
-                "night" => JobHoldUntil.Night,
-                "weekend" => JobHoldUntil.Weekend,
-                "second-shift" => JobHoldUntil.SecondShift,
-                "third-shift" => JobHoldUntil.ThirdShift,
-                _ => JobHoldUntil.Unsupported,
-            });
-
-            map.CreateMap<JobHoldUntil, string>((src, ctx) => src switch
-            {
-                JobHoldUntil.NoHold => "no-hold",
-                JobHoldUntil.Indefinite => "indefinite",
-                JobHoldUntil.DayTime => "day-time",
-                JobHoldUntil.Evening => "evening",
-                JobHoldUntil.Night => "night",
-                JobHoldUntil.Weekend => "weekend",
-                JobHoldUntil.SecondShift => "second-shift",
-                JobHoldUntil.ThirdShift => "third-shift",
-                _ => "unsupported",
-            });
+            return string.Join( "", input.Split( '-' ).Select( x => x.First().ToString().ToUpper() + x.Substring( 1 ).ToLower() ) );
         }
 
-        private void ConfigureMultipleDocumentHandling(IMapperConstructor map)
+        private string ConvertCamelCaseToDash( string input )
         {
-            map.CreateIppMap<string, MultipleDocumentHandling>((src, ctx) => src switch
-            {
-                "single-document" => MultipleDocumentHandling.SingleDocument,
-                "separate-documents-uncollated-copies" => MultipleDocumentHandling.SeparateDocumentsUncollatedCopies,
-                "separate-documents-collated-copies" => MultipleDocumentHandling.SeparateDocumentsCollatedCopies,
-                "single-document-new-sheet" => MultipleDocumentHandling.SingleDocumentNewSheet,
-                _ => MultipleDocumentHandling.Unsupported,
-            });
-
-            map.CreateMap<MultipleDocumentHandling, string>((src, ctx) => src switch
-            {
-                MultipleDocumentHandling.SingleDocument => "single-document",
-                MultipleDocumentHandling.SeparateDocumentsUncollatedCopies => "separate-documents-uncollated-copies",
-                MultipleDocumentHandling.SeparateDocumentsCollatedCopies => "separate-documents-collated-copies",
-                MultipleDocumentHandling.SingleDocumentNewSheet => "single-document-new-sheet",
-                _ => "unsupported",
-            });
+            return string.Concat( input.Select( ( x, i ) => i > 0 && char.IsUpper( x ) && (char.IsLower( input[ i - 1 ] ) || i < input.Length - 1 && char.IsLower( input[ i + 1 ] ))
+                ? "-" + x
+                : x.ToString() ) ).ToLowerInvariant();
         }
 
-        private void ConfigureSides(IMapperConstructor map)
+        private void ConfigureKeyword<T>( IMapperConstructor map, T defaultValue ) where T : struct, Enum
         {
-            map.CreateIppMap<string, Sides>((src, ctx) => src switch
-            {
-                "one-sided" => Sides.OneSided,
-                "two-sided-long-edge" => Sides.TwoSidedLongEdge,
-                "two-sided-short-edge" => Sides.TwoSidedShortEdge,
-                _ => Sides.Unsupported,
-            });
-
-            map.CreateMap<Sides, string>((src, ctx) => src switch
-            {
-                Sides.OneSided => "one-sided",
-                Sides.TwoSidedLongEdge => "two-sided-long-edge",
-                Sides.TwoSidedShortEdge => "two-sided-short-edge",
-                _ => "unsupported",
-            });
-        }
-
-        private void ConfigureJobSheets(IMapperConstructor map)
-        {
-            map.CreateIppMap<string, JobSheets>((src, ctx) => src switch
-            {
-                "none" => JobSheets.None,
-                "standard" => JobSheets.Standard,
-                _ => JobSheets.Unsupported,
-            });
-
-            map.CreateMap<JobSheets, string>((src, ctx) => src switch
-            {
-                JobSheets.None => "none",
-                JobSheets.Standard => "standard",
-                _ => "unsupported",
-            });
-        }
-
-        private void ConfigureCompression(IMapperConstructor map)
-        {
-            map.CreateIppMap<string, Compression>((src, ctx) => src switch
-            {
-                "none" => Compression.None,
-                "deflate" => Compression.Deflate,
-                "gzip" => Compression.Gzip,
-                _ => Compression.Unsupported,
-            });
-
-            map.CreateMap<Compression, string>((src, ctx) => src switch
-            {
-                Compression.None => "none",
-                Compression.Deflate => "deflate",
-                Compression.Gzip => "gzip",
-                _ => "unsupported",
-            });
-        }
-
-        private void ConfigurePrintScaling(IMapperConstructor map)
-        {
-            map.CreateIppMap<string, PrintScaling>((src, ctx) => src switch
-            {
-                "auto" => PrintScaling.Auto,
-                "auto-fit" => PrintScaling.AutoFit,
-                "fill" => PrintScaling.Fill,
-                "fit" => PrintScaling.Fit,
-                "none" => PrintScaling.None,
-                _ => PrintScaling.Unsupported,
-            });
-
-            map.CreateMap<PrintScaling, string>((src, ctx) => src switch
-            {
-                PrintScaling.Auto => "auto",
-                PrintScaling.AutoFit => "auto-fit",
-                PrintScaling.Fill => "fill",
-                PrintScaling.Fit => "fit",
-                PrintScaling.None => "None",
-                _ => "unsupported",
-            });
-        }
-
-        private void ConfigureWhichJobs(IMapperConstructor map)
-        {
-            map.CreateIppMap<string, WhichJobs>((src, ctx) => src switch
-            {
-                "completed" => WhichJobs.Completed,
-                "not-completed" => WhichJobs.NotCompleted,
-                _ => WhichJobs.Unsupported,
-            });
-
-            map.CreateMap<WhichJobs, string>((src, ctx) => src switch
-            {
-                WhichJobs.Completed => "completed",
-                WhichJobs.NotCompleted => "not-completed",
-                _ => "unsupported",
-            });
+            map.CreateIppMap<string, T>( ( src, ctx ) => Enum.TryParse( ConvertDashToCamelCase( src ), false, out T value ) ? value : defaultValue );
+            map.CreateIppMap<T, string>( ( src, ctx ) => ConvertCamelCaseToDash( src.ToString() ) );
         }
     }
 }

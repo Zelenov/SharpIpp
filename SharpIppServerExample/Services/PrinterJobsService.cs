@@ -7,6 +7,7 @@ using SharpIpp.Models;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.Options;
 using SharpIpp.Exceptions;
+using System.Linq;
 
 namespace SharpIppServerExample.Services;
 
@@ -19,13 +20,7 @@ public class PrinterJobsService
     private readonly IOptions<PrinterOptions> _options;
     private readonly FileExtensionContentTypeProvider _contentTypeProvider;
     private bool _isPaused;
-    private readonly ConcurrentDictionary<int, PrinterJob> _createdJobs = new();
-    private readonly ConcurrentDictionary<int, PrinterJob> _pendingJobs = new();
-    private readonly ConcurrentDictionary<int, PrinterJob> _processingJobs = new();
-    private readonly ConcurrentDictionary<int, PrinterJob> _failedJobs = new();
-    private readonly ConcurrentDictionary<int, PrinterJob> _suspendedJobs = new();
-    private readonly ConcurrentDictionary<int, PrinterJob> _canceledJobs = new();
-    private readonly ConcurrentDictionary<int, PrinterJob> _completedJobs = new();
+    private readonly ConcurrentDictionary<int, PrinterJob> _jobs = new();
     private readonly string _documentFormatDefault;
     private readonly DateTimeOffset _startTime;
     private readonly PrintScaling _printScalingDefault = PrintScaling.Auto;
@@ -71,16 +66,16 @@ public class PrinterJobsService
                 GetJobAttributesRequest x => GetGetJobAttributesResponse(x),
                 GetJobsRequest x => GetGetJobsResponse(x),
                 GetPrinterAttributesRequest x => GetGetPrinterAttributesResponse(x),
-                HoldJobRequest x => GetHoldJobResponse(x),
+                HoldJobRequest x => await GetHoldJobResponseAsync(x),
                 PausePrinterRequest x => GetPausePrinterResponse(x),
-                PrintJobRequest x => GetPrintJobResponse(x),
+                PrintJobRequest x => await GetPrintJobResponseAsync(x),
                 PrintUriRequest x => GetPrintUriResponse(x),
                 PurgeJobsRequest x => GetPurgeJobsResponse(x),
-                ReleaseJobRequest x => GetReleaseJobResponse(x),
-                RestartJobRequest x => GetRestartJobResponse(x),
+                ReleaseJobRequest x => await GetReleaseJobResponseAsync(x),
+                RestartJobRequest x => await GetRestartJobResponseAsync(x),
                 ResumePrinterRequest x => GetResumePrinterResponse(x),
-                SendDocumentRequest x => GetSendDocumentResponse(x),
-                SendUriRequest x => GetSendUriResponse(x),
+                SendDocumentRequest x => await GetSendDocumentResponseAsync( x),
+                SendUriRequest x => await GetSendUriResponseAsync( x),
                 ValidateJobRequest x => GetValidateJobResponse(x),
                 _ => throw new NotImplementedException()
             };
@@ -117,62 +112,69 @@ public class PrinterJobsService
         };
     }
 
-    private SendUriResponse GetSendUriResponse( SendUriRequest request )
+    private async Task<SendUriResponse> GetSendUriResponseAsync( SendUriRequest request )
     {
-        var isSuccess = false;
-        var jobId = GetJobId( request );
-        if ( jobId.HasValue && _createdJobs.TryRemove( jobId.Value, out var job ) )
-        {
-            job.Requests.Add( request );
-            _logger.LogDebug( "Document has been added to job {id}", job.Id );
-            if ( request.LastDocument )
-            {
-                _pendingJobs.TryAdd( job.Id, job );
-                _logger.LogDebug( "Job {id} has been moved to queue", jobId );
-            }   
-            else
-                _createdJobs.TryAdd( job.Id, job );
-            isSuccess = true;
-        }
-        return new SendUriResponse
+        var response = new SendUriResponse
         {
             RequestId = request.RequestId,
             Version = request.Version,
-            StatusCode = isSuccess ? IppStatusCode.SuccessfulOk : IppStatusCode.ClientErrorNotPossible,
-            JobId = jobId ?? 0,
-            JobUri = $"{GetPrinterUrl()}/{jobId ?? 0}"
+            StatusCode = IppStatusCode.ClientErrorNotPossible
         };
+        var jobId = GetJobId( request );
+        if (!jobId.HasValue)
+            return response;
+        response.JobId = jobId.Value;
+        response.JobUri = $"{GetPrinterUrl()}/{jobId.Value}";
+        if(!_jobs.TryGetValue( jobId.Value, out var job ))
+            return response;
+        var copy = new PrinterJob( job );
+        if (request.LastDocument)
+        {
+            if(!await copy.TrySetStateAsync( JobState.Pending, DateTimeOffset.UtcNow ))
+                return response;
+            _logger.LogDebug( "Job {id} has been moved to queue", job.Id );
+        }
+        request.DocumentAttributes ??= new DocumentAttributes();
+        FillWithDefaultValues( request.DocumentAttributes );
+        job.Requests.Add( request );
+        _logger.LogDebug( "Document has been added to job {id}", job.Id );
+        if (!_jobs.TryUpdate( jobId.Value, copy, job ))
+            return response;
+        response.StatusCode = IppStatusCode.SuccessfulOk;
+        return response;
     }
 
-    private SendDocumentResponse GetSendDocumentResponse( SendDocumentRequest request )
+    private async Task<SendDocumentResponse> GetSendDocumentResponseAsync( SendDocumentRequest request )
     {
-        var isSuccess = false;
-        JobState jobState = JobState.Processing;
-        var jobId = GetJobId( request );
-        if ( jobId.HasValue && _createdJobs.TryRemove( jobId.Value, out var job ) )
-        {
-            request.DocumentAttributes ??= new();
-            FillWithDefaultValues( request.DocumentAttributes );
-            job.Requests.Add( request );
-            _logger.LogDebug( "Document has been added to job {id}", jobId );
-            if ( request.LastDocument )
-            {
-                _pendingJobs.TryAdd( job.Id, job );
-                _logger.LogDebug( "Job {id} has been moved to queue", job.Id );
-            }
-            else
-                _createdJobs.TryAdd( job.Id, job );
-            isSuccess = true;
-        }
-        return new SendDocumentResponse
+        var response = new SendDocumentResponse
         {
             RequestId = request.RequestId,
             Version = request.Version,
-            StatusCode = isSuccess ? IppStatusCode.SuccessfulOk : IppStatusCode.ClientErrorNotPossible,
-            JobId = jobId ?? 0,
-            JobUri = $"{GetPrinterUrl()}/{jobId ?? 0}",
-            JobState = jobState
+            StatusCode = IppStatusCode.ClientErrorNotPossible
         };
+        var jobId = GetJobId( request );
+        if (!jobId.HasValue)
+            return response;
+        response.JobId = jobId.Value;
+        response.JobUri = $"{GetPrinterUrl()}/{jobId.Value}";
+        if (!_jobs.TryGetValue( jobId.Value, out var job ))
+            return response;
+        var copy = new PrinterJob( job );
+        if (request.LastDocument)
+        {
+            if (!await copy.TrySetStateAsync( JobState.Pending, DateTimeOffset.UtcNow ))
+                return response;
+            _logger.LogDebug( "Job {id} has been moved to queue", job.Id );
+        }
+        request.DocumentAttributes ??= new DocumentAttributes();
+        FillWithDefaultValues( request.DocumentAttributes );
+        job.Requests.Add( request );
+        _logger.LogDebug( "Document has been added to job {id}", job.Id );
+        if (!_jobs.TryUpdate( jobId.Value, copy, job ))
+            return response;
+        response.JobState = JobState.Pending;
+        response.StatusCode = IppStatusCode.SuccessfulOk;
+        return response;
     }
 
     private ReleaseJobResponse GetResumePrinterResponse( ResumePrinterRequest request )
@@ -185,46 +187,55 @@ public class PrinterJobsService
         };
     }
 
-    private ReleaseJobResponse GetRestartJobResponse( RestartJobRequest request )
+    private async Task<ReleaseJobResponse> GetRestartJobResponseAsync( RestartJobRequest request )
     {
-        var jobId = GetJobId( request );
-        var isRestarted = false;
-        if( jobId.HasValue && _failedJobs.TryRemove( jobId.Value, out var job ) )
-        {
-            _pendingJobs.TryAdd( jobId.Value, job );
-            isRestarted = true;
-        }
-        return new ReleaseJobResponse
+        var response = new ReleaseJobResponse
         {
             RequestId = request.RequestId,
             Version = request.Version,
-            StatusCode = isRestarted ? IppStatusCode.SuccessfulOk : IppStatusCode.ClientErrorNotPossible
+            StatusCode = IppStatusCode.ClientErrorNotPossible
         };
+        var jobId = GetJobId( request );
+        if (!jobId.HasValue)
+            return response;
+        if (!_jobs.TryGetValue( jobId.Value, out var job ))
+            return response;
+        var copy = new PrinterJob( job );
+        if (!await copy.TrySetStateAsync( JobState.Pending, DateTimeOffset.UtcNow ))
+            return response;
+        if (!_jobs.TryUpdate( jobId.Value, copy, job ))
+            return response;
+        response.StatusCode = IppStatusCode.SuccessfulOk;
+        return response;
     }
 
-    private ReleaseJobResponse GetReleaseJobResponse( ReleaseJobRequest request )
+    private async Task<ReleaseJobResponse> GetReleaseJobResponseAsync( ReleaseJobRequest request )
     {
-        var jobId = GetJobId( request );
-        var isReleased = false;
-        if ( jobId.HasValue && _suspendedJobs.TryRemove( jobId.Value, out var job ) )
-        {
-            _pendingJobs.TryAdd( jobId.Value, job );
-            _logger.LogDebug( "Job {id} has been released", jobId );
-            isReleased = false;
-        }
-        return new ReleaseJobResponse
+        var response = new ReleaseJobResponse
         {
             RequestId = request.RequestId,
             Version = request.Version,
-            StatusCode = isReleased ? IppStatusCode.SuccessfulOk : IppStatusCode.ClientErrorNotPossible
+            StatusCode = IppStatusCode.ClientErrorNotPossible
         };
+        var jobId = GetJobId( request );
+        if (!jobId.HasValue)
+            return response;
+        if (!_jobs.TryGetValue( jobId.Value, out var job ))
+            return response;
+        var copy = new PrinterJob( job );
+        if (!await copy.TrySetStateAsync( JobState.Pending, DateTimeOffset.UtcNow ))
+            return response;
+        if (!_jobs.TryUpdate( jobId.Value, copy, job ))
+            return response;
+        response.StatusCode = IppStatusCode.SuccessfulOk;
+        _logger.LogDebug( "Job {id} has been released", jobId );
+        return response;
     }
 
     private PurgeJobsResponse GetPurgeJobsResponse( PurgeJobsRequest request )
     {
-        _createdJobs.Clear();
-        _pendingJobs.Clear();
-        _suspendedJobs.Clear();
+        foreach (var job in _jobs.Values.Where( x => x.IsNew || x.IsHold || x.State == JobState.Pending ))
+            _jobs.TryRemove( job.Id, out _ );
         return new PurgeJobsResponse
         {
             RequestId = request.RequestId,
@@ -235,23 +246,26 @@ public class PrinterJobsService
 
     private PrintUriResponse GetPrintUriResponse( PrintUriRequest request )
     {
+        var response = new PrintUriResponse
+        {
+            RequestId = request.RequestId,
+            Version = request.Version,
+            JobState = JobState.Pending,
+            StatusCode = IppStatusCode.ClientErrorNotPossible
+        };
         var job = new PrinterJob( GetNextValue(), request.RequestingUserName, DateTimeOffset.UtcNow );
+        response.JobId = job.Id;
+        response.JobUri = $"{GetPrinterUrl()}/{job.Id}";
         request.DocumentAttributes ??= new();
         FillWithDefaultValues( request.DocumentAttributes );
         request.NewJobAttributes ??= new();
         FillWithDefaultValues( request.NewJobAttributes );
         job.Requests.Add( request );
-        _createdJobs.TryAdd( job.Id, job );
+        if (!_jobs.TryAdd( job.Id, job ))
+            return response;
+        response.StatusCode = IppStatusCode.SuccessfulOk;
         _logger.LogDebug( "Job {id} has been added to queue", job.Id );
-        return new PrintUriResponse
-        {
-            RequestId = request.RequestId,
-            Version = request.Version,
-            JobState = JobState.Pending,
-            StatusCode = IppStatusCode.SuccessfulOk,
-            JobId = job.Id,
-            JobUri = $"{GetPrinterUrl()}/{job.Id}"
-        };
+        return response;
     }
 
     private PausePrinterResponse GetPausePrinterResponse( PausePrinterRequest request )
@@ -264,22 +278,27 @@ public class PrinterJobsService
         };
     }
 
-    private HoldJobResponse GetHoldJobResponse( HoldJobRequest request )
+    private async Task<HoldJobResponse> GetHoldJobResponseAsync( HoldJobRequest request )
     {
-        var jobId = GetJobId( request );
-        var isHeld = false;
-        if ( jobId.HasValue && _pendingJobs.TryRemove( jobId.Value, out var job ) )
-        {
-            _suspendedJobs.TryAdd( jobId.Value, job );
-            _logger.LogDebug( "Job {id} has been suspended", jobId );
-            isHeld = true;
-        }
-        return new HoldJobResponse
+        var response = new HoldJobResponse
         {
             RequestId = request.RequestId,
             Version = request.Version,
-            StatusCode = isHeld ? IppStatusCode.SuccessfulOk : IppStatusCode.ClientErrorNotPossible
+            StatusCode = IppStatusCode.ClientErrorNotPossible
         };
+        var jobId = GetJobId( request );
+        if (!jobId.HasValue)
+            return response;
+        if (!_jobs.TryGetValue( jobId.Value, out var job ))
+            return response;
+        var copy = new PrinterJob( job );
+        if (!await copy.TrySetStateAsync( null, DateTimeOffset.UtcNow ))
+            return response;
+        if (!_jobs.TryUpdate( jobId.Value, copy, job ))
+            return response;
+        response.StatusCode = IppStatusCode.SuccessfulOk;
+        _logger.LogDebug( "Job {id} has been held", jobId );
+        return response;
     }
 
     private GetPrinterAttributesResponse GetGetPrinterAttributesResponse( GetPrinterAttributesRequest request )
@@ -291,7 +310,9 @@ public class PrinterJobsService
             RequestId = request.RequestId,
             Version = request.Version,
             StatusCode = IppStatusCode.SuccessfulOk,
-            PrinterState = !IsRequired( PrinterAttribute.PrinterState) ? null : _pendingJobs.IsEmpty ? PrinterState.Idle : PrinterState.Processing,
+            PrinterState = !IsRequired( PrinterAttribute.PrinterState)
+                ? null
+                : _jobs.Values.Any( x => x.State == JobState.Pending || x.State == JobState.Processing ) ? PrinterState.Processing : PrinterState.Idle,
             PrinterStateReasons = !IsRequired( PrinterAttribute.PrinterStateReasons) ? null : new string[] { "none" },
             CharsetConfigured = !IsRequired( PrinterAttribute.CharsetConfigured ) ? null : "utf-8",
             CharsetSupported = !IsRequired( PrinterAttribute.CharsetSupported) ? null :new string[] { "utf-8" },
@@ -323,7 +344,7 @@ public class PrinterJobsService
                 IppOperation.PausePrinter,
                 IppOperation.ResumePrinter
             },
-            QueuedJobCount = !IsRequired( PrinterAttribute.QueuedJobCount) ? null : _pendingJobs.Count,
+            QueuedJobCount = !IsRequired( PrinterAttribute.QueuedJobCount) ? null : _jobs.Values.Where( x => x.State == JobState.Pending || x.State == JobState.Processing ).Count(),
             DocumentFormatSupported = !IsRequired( PrinterAttribute.DocumentFormatSupported) ? null : new string[] { _documentFormatDefault },
             MultipleDocumentJobsSupported = !IsRequired( PrinterAttribute.MultipleDocumentJobsSupported) ? null : true,
             CompressionSupported = !IsRequired( PrinterAttribute.CompressionSupported) ? null : new Compression[] { Compression.None },
@@ -331,8 +352,8 @@ public class PrinterJobsService
             PrintScalingDefault = !IsRequired( PrinterAttribute.PrintScalingDefault) ? null : _printScalingDefault,
             PrintScalingSupported = !IsRequired( PrinterAttribute.PrintScalingSupported) ? null : new PrintScaling[] { _printScalingDefault },
             PrinterUriSupported = !IsRequired( PrinterAttribute.PrinterUriSupported) ? null : new string[] { GetPrinterUrl() },
-            UriAuthenticationSupported = !IsRequired( PrinterAttribute.UriAuthenticationSupported) ? null : new string[] { "none" },
-            UriSecuritySupported = !IsRequired( PrinterAttribute.UriSecuritySupported) ? null : new string[] { GetUriSecuritySupported() },
+            UriAuthenticationSupported = !IsRequired( PrinterAttribute.UriAuthenticationSupported) ? null : new[] { UriAuthentication.None },
+            UriSecuritySupported = !IsRequired( PrinterAttribute.UriSecuritySupported) ? null : new[] { GetUriSecuritySupported() },
             PrinterUpTime = !IsRequired( PrinterAttribute.PrinterUpTime) ? null : (int)(DateTimeOffset.UtcNow - _startTime).TotalSeconds,
             MediaDefault = !IsRequired( PrinterAttribute.MediaDefault) ? null : _mediaDefault,
             MediaColDefault = !IsRequired( PrinterAttribute.MediaDefault) ? null : _mediaDefault,
@@ -358,49 +379,59 @@ public class PrinterJobsService
             PrinterMoreInfo = !IsRequired( PrinterAttribute.PrinterMoreInfo ) ? null : GetPrinterMoreInfo(),
             JobHoldUntilSupported = !IsRequired( PrinterAttribute.JobHoldUntilSupported ) ? null : new[] { JobHoldUntil.NoHold },
             JobHoldUntilDefault = !IsRequired( PrinterAttribute.JobHoldUntilDefault ) ? null : JobHoldUntil.NoHold,
-            ReferenceUriSchemesSupported = !IsRequired( PrinterAttribute.ReferenceUriSchemesSupported ) ? null : new[] { "ftp" },
+            ReferenceUriSchemesSupported = !IsRequired( PrinterAttribute.ReferenceUriSchemesSupported ) ? null : new[] { UriScheme.Ftp, UriScheme.Http, UriScheme.Https },
         };
     }
 
-    private string GetUriSecuritySupported()
+    private UriSecurity GetUriSecuritySupported()
     {
         var request = _httpContextAccessor.HttpContext?.Request ?? throw new Exception( "Unable to access HttpContext" );
-        return request.IsHttps ? "tls" : "none";
+        return request.IsHttps ? UriSecurity.Tls : UriSecurity.None;
     }
 
     private GetJobsResponse GetGetJobsResponse( GetJobsRequest request )
     {
-        var jobs = GetJobs(
-            !request.WhichJobs.HasValue || request.WhichJobs.Value == WhichJobs.NotCompleted,
-            !request.WhichJobs.HasValue || request.WhichJobs.Value == WhichJobs.Completed,
-            ( request.MyJobs ?? false ) ? request.RequestingUserName : null,
-            request.Limit ?? int.MaxValue )
-            .Select( x => GetJobAttributes( x.Job, x.JobState, request.RequestedAttributes, true ) )
-            .ToArray();
+        IEnumerable<PrinterJob> jobs = _jobs.Values;
+        jobs = request.WhichJobs switch
+        {
+            WhichJobs.Completed => jobs.Where( x => x.State == JobState.Completed || x.State == JobState.Aborted || x.State == JobState.Canceled ),
+            WhichJobs.NotCompleted => jobs.Where( x => x.State == JobState.Processing || x.State == JobState.Pending ),
+            _ => jobs.Where( x => x.State.HasValue )
+        };
+        if (request.MyJobs ?? false)
+            jobs = jobs.Where( x => x.UserName?.Equals( request.RequestingUserName ) ?? false );
+        jobs = jobs.OrderByDescending( x => x.State ).ThenByDescending( x => x.Id );
+        if (request.Limit.HasValue)
+            jobs = jobs.Take( request.Limit.Value );
         return new GetJobsResponse
         {
             RequestId = request.RequestId,
             Version = request.Version,
             StatusCode = IppStatusCode.SuccessfulOk,
-            Jobs = jobs
+            Jobs = jobs.Select( x => GetJobAttributes( x, request.RequestedAttributes, true ) ).ToArray()
         };
     }
 
     private GetJobAttributesResponse GetGetJobAttributesResponse( GetJobAttributesRequest request )
     {
-        var jobId = GetJobId( request );
-        var (job, jobState) = jobId.HasValue ? GetJob( jobId.Value ) : (null, JobState.Aborted);
-        var jobAttributes = job != null ? GetJobAttributes( job, jobState, request.RequestedAttributes, false ) : null;
-        return new GetJobAttributesResponse
+        var response = new GetJobAttributesResponse
         {
             RequestId = request.RequestId,
             Version = request.Version,
-            StatusCode = jobAttributes == null ? IppStatusCode.ClientErrorNotPossible : IppStatusCode.SuccessfulOk,
-            JobAttributes = jobAttributes ?? new JobAttributes()
+            StatusCode = IppStatusCode.ClientErrorNotPossible,
+            JobAttributes = new JobAttributes()
         };
+        var jobId = GetJobId( request );
+        if(!jobId.HasValue)
+            return response;
+        if(!_jobs.TryGetValue(jobId.Value, out var job))
+            return response;
+        response.JobAttributes = GetJobAttributes( job, request.RequestedAttributes, false );
+        response.StatusCode = IppStatusCode.SuccessfulOk;
+        return response;
     }
 
-    private JobAttributes GetJobAttributes(PrinterJob job, JobState jobState, string[]? requestedAttributes, bool isBatch )
+    private JobAttributes GetJobAttributes(PrinterJob job, string[]? requestedAttributes, bool isBatch )
     {
         var jobAttributes = job.Requests.Select( x => x switch
         {
@@ -432,8 +463,8 @@ public class PrinterJobsService
             JobId = job.Id,
             JobUri = $"{GetPrinterUrl()}/{job.Id}",
             JobPrinterUri = !IsRequired( JobAttribute.JobPrinterUri ) ? null : GetPrinterUrl(),
-            JobState = !IsRequired( JobAttribute.JobState ) ? null : jobState,
-            JobStateReasons = !IsRequired( JobAttribute.JobState ) ? null : new[] { "none" },
+            JobState = !IsRequired( JobAttribute.JobState ) ? null : job.State,
+            JobStateReasons = !IsRequired( JobAttribute.JobState ) ? null : new[] { JobStateReason.None },
             DateTimeAtCreation = !IsRequired( JobAttribute.DateTimeAtCreation ) ? null : job.CreatedDateTime,
             TimeAtCreation = !IsRequired( JobAttribute.TimeAtCreation ) ? null : (int)(job.CreatedDateTime - _startTime).TotalSeconds,
             DateTimeAtProcessing = !IsRequired( JobAttribute.DateTimeAtProcessing ) ? null : job.ProcessingDateTime,
@@ -472,117 +503,115 @@ public class PrinterJobsService
 
     private CreateJobResponse GetCreateJobResponse( CreateJobRequest request )
     {
-        var job = new PrinterJob( GetNextValue(), request.RequestingUserName, DateTimeOffset.UtcNow );
-        request.NewJobAttributes ??= new();
-        FillWithDefaultValues( request.NewJobAttributes );
-        job.Requests.Add( request );
-        _createdJobs.TryAdd( job.Id, job );
-        _logger.LogDebug( "Job {id} has been created", job.Id );
-        return new CreateJobResponse
+        var response = new CreateJobResponse
         {
             RequestId = request.RequestId,
             Version = request.Version,
             JobState = JobState.Pending,
-            StatusCode = IppStatusCode.SuccessfulOk,
-            JobStateReasons = new[] { "none" },
-            JobId = job.Id,
-            JobUri = $"{GetPrinterUrl()}/{job.Id}"
+            StatusCode = IppStatusCode.ClientErrorNotPossible,
+            JobStateReasons = new[] { JobStateReason.None }
         };
+        var job = new PrinterJob( GetNextValue(), request.RequestingUserName, DateTimeOffset.UtcNow );
+        response.JobId = job.Id;
+        response.JobUri = $"{GetPrinterUrl()}/{job.Id}";
+        request.NewJobAttributes ??= new();
+        FillWithDefaultValues( request.NewJobAttributes );
+        job.Requests.Add( request );
+        if (!_jobs.TryAdd( job.Id, job ))
+            return response;
+        response.StatusCode = IppStatusCode.SuccessfulOk;
+        _logger.LogDebug( "Job {id} has been added to queue", job.Id );
+        return response;
     }
 
     private async Task<CancelJobResponse> GetCancelJobResponseAsync( CancelJobRequest request )
     {
-        var jobId = GetJobId( request );
-        var isCanceled = false;
-        if (jobId.HasValue
-            && ( _createdJobs.TryRemove( jobId.Value, out var job )
-            || _pendingJobs.TryRemove( jobId.Value, out job )
-            || _suspendedJobs.TryRemove( jobId.Value, out job ) ))
-        {
-            job.ProcessingDateTime = DateTimeOffset.UtcNow;
-            job.CompletedDateTime = DateTimeOffset.UtcNow;
-            _canceledJobs.TryAdd( job.Id, job );
-            foreach ( var ippRequest in job.Requests )
-            {
-                var document = ippRequest switch
-                {
-                    PrintJobRequest printJobRequest => printJobRequest.Document,
-                    SendDocumentRequest sendDocumentRequest => sendDocumentRequest.Document,
-                    _ => null
-                };
-                if ( document != null )
-                    await document.DisposeAsync();
-            }
-            isCanceled = true;
-            _logger.LogDebug( "Job {id} has been canceled", jobId );
-        }   
-        else
-            _logger.LogDebug( "Unable to cancel job {id}", jobId );
-        return new CancelJobResponse
+        var response = new CancelJobResponse
         {
             RequestId = request.RequestId,
             Version = request.Version,
-            StatusCode = isCanceled ? IppStatusCode.SuccessfulOk : IppStatusCode.ClientErrorNotPossible
+            StatusCode = IppStatusCode.ClientErrorNotPossible
         };
+        var jobId = GetJobId( request );
+        if (!jobId.HasValue)
+            return response;
+        if (!_jobs.TryGetValue( jobId.Value, out var job ))
+            return response;
+        var copy = new PrinterJob( job );
+        if (!await copy.TrySetStateAsync( JobState.Canceled, DateTimeOffset.UtcNow ))
+            return response;
+        if (!_jobs.TryUpdate( jobId.Value, copy, job ))
+            return response;
+        response.StatusCode = IppStatusCode.SuccessfulOk;
+        _logger.LogDebug( "Job {id} has been canceled", jobId );
+        return response;
     }
 
-    public Task<PrinterJob?> GetPendingJobAsync()
+    public async Task<PrinterJob?> GetPendingJobAsync()
     {
         if ( _isPaused )
-            return Task.FromResult<PrinterJob?>( null );
-        while ( true )
+            return null;
+        foreach (var job in _jobs.Values.Where( x => x.State == JobState.Pending ).OrderBy( x => x.Id ))
         {
-            if ( _pendingJobs.IsEmpty )
-                return Task.FromResult<PrinterJob?>( null );
-            var keys = _pendingJobs.Keys;
-            if ( !keys.Any() )
-                return Task.FromResult<PrinterJob?>( null );
-            if ( _pendingJobs.TryRemove( keys.OrderBy( x => x ).Min(), out PrinterJob? job ) )
-            {
-                job.ProcessingDateTime = DateTimeOffset.UtcNow;
-                _processingJobs.TryAdd( job.Id, job );
-                return Task.FromResult<PrinterJob?>( job );
-            }
+            var copy = new PrinterJob( job );
+            if (!await copy.TrySetStateAsync( JobState.Processing, DateTimeOffset.UtcNow ))
+                continue;
+            if (!_jobs.TryUpdate( job.Id, copy, job ))
+                continue;
+            return copy;
         }
+        return null;
     }
 
-    public Task AddCompletedJobAsync( int jobId )
+    public async Task AddCompletedJobAsync( int jobId )
     {
-        if (_processingJobs.TryRemove( jobId, out PrinterJob? job ))
-        {
-            job.CompletedDateTime = DateTimeOffset.UtcNow;
-            _completedJobs.TryAdd( job.Id, job );
-        }
-        return Task.CompletedTask;
+        if (!_jobs.TryGetValue( jobId, out var job ))
+            return;
+        var copy = new PrinterJob( job );
+        if (!await copy.TrySetStateAsync( JobState.Completed, DateTimeOffset.UtcNow ))
+            return;
+        if(!_jobs.TryUpdate(jobId,copy, job ))
+            return;
+        _logger.LogDebug( "Job {id} has been completed", job.Id );
     }
 
-    public Task AddFailedJobAsync( int jobId )
+    public async Task AddAbortedJobAsync( int jobId )
     {
-        if (_processingJobs.TryRemove( jobId, out PrinterJob? job ))
-            _failedJobs.TryAdd( job.Id, job );
-        return Task.CompletedTask;
+        if (!_jobs.TryGetValue( jobId, out var job ))
+            return;
+        var copy = new PrinterJob( job );
+        if (!await copy.TrySetStateAsync( JobState.Aborted, DateTimeOffset.UtcNow ))
+            return;
+        if (!_jobs.TryUpdate( jobId, copy, job ))
+            return;
+        _logger.LogDebug( "Job {id} has been aborted", job.Id );
     }
 
-    private PrintJobResponse GetPrintJobResponse( PrintJobRequest request )
+    private async Task<PrintJobResponse> GetPrintJobResponseAsync( PrintJobRequest request )
     {
-        var job = new PrinterJob( GetNextValue(), request.RequestingUserName, DateTimeOffset.UtcNow );
-        request.DocumentAttributes ??= new();
-        FillWithDefaultValues( request.DocumentAttributes );
-        request.NewJobAttributes ??= new();
-        FillWithDefaultValues( request.NewJobAttributes );
-        job.Requests.Add( request );
-        _pendingJobs.TryAdd( job.Id, job );
-        _logger.LogDebug( "Job {id} has been added to queue", job.Id );
-        return new PrintJobResponse
+        var response = new PrintJobResponse
         {
             RequestId = request.RequestId,
             Version = request.Version,
             JobState = JobState.Pending,
-            JobStateReasons = new[] { "none" },
-            StatusCode = IppStatusCode.SuccessfulOk,
-            JobId = job.Id,
-            JobUri = $"{GetPrinterUrl()}/{job.Id}"
+            StatusCode = IppStatusCode.ClientErrorNotPossible,
+            JobStateReasons = new[] { JobStateReason.None }
         };
+        var job = new PrinterJob( GetNextValue(), request.RequestingUserName, DateTimeOffset.UtcNow );
+        response.JobId = job.Id;
+        response.JobUri = $"{GetPrinterUrl()}/{job.Id}";
+        request.NewJobAttributes ??= new();
+        FillWithDefaultValues( request.NewJobAttributes );
+        request.DocumentAttributes ??= new();
+        FillWithDefaultValues( request.DocumentAttributes );
+        job.Requests.Add( request );
+        if (!await job.TrySetStateAsync( JobState.Pending, DateTimeOffset.UtcNow ))
+            return response;
+        if (!_jobs.TryAdd( job.Id, job ))
+            return response;
+        response.StatusCode = IppStatusCode.SuccessfulOk;
+        _logger.LogDebug( "Job {id} has been added to queue", job.Id );
+        return response;
     }
 
     private string GetPrinterUrl()
@@ -604,53 +633,6 @@ public class PrinterJobsService
         return request.JobId;
     }
 
-    private (PrinterJob? Job, JobState JobState) GetJob(int jobId)
-    {
-        if ( _createdJobs.TryGetValue( jobId, out var job ) )
-            return ( job, JobState.Pending );
-        if ( _pendingJobs.TryGetValue( jobId, out job ) )
-            return ( job, JobState.Pending );
-        if ( _suspendedJobs.TryGetValue( jobId, out job ) )
-            return (job, JobState.PendingHeld);
-        if ( _completedJobs.TryGetValue( jobId, out job ) )
-            return ( job, JobState.Completed );
-        if ( _failedJobs.TryGetValue( jobId, out job ) )
-            return (job, JobState.Aborted);
-        if ( _canceledJobs.TryGetValue( jobId, out job ) )
-            return ( job, JobState.Canceled );
-        return (null, JobState.Aborted);
-    }
-    private List<(PrinterJob Job, JobState JobState)> GetJobs( bool returnNotCompleted, bool returnCompleted, string? userName, int limit)
-    {
-        var list = new List<(PrinterJob Job, JobState JobState)>();
-        if ( returnNotCompleted )
-            list.AddRange( _pendingJobs.Values
-                .Where( x => userName == null || x.UserName == userName )
-                .Take( limit - list.Count )
-                .Select( x => (x, JobState.Pending) ) );
-        if( returnNotCompleted && list.Count < limit )
-            list.AddRange( _processingJobs.Values
-                .Where( x => userName == null || x.UserName == userName )
-                .Take( limit - list.Count )
-                .Select( x => (x, JobState.Processing) ) );
-        if ( returnCompleted && list.Count < limit )
-            list.AddRange( _completedJobs.Values
-                .Where( x => userName == null || x.UserName == userName )
-                .Take( limit - list.Count )
-                .Select( x => (x, JobState.Completed) ) );
-        if ( returnCompleted && list.Count < limit )
-            list.AddRange( _failedJobs.Values
-                .Where( x => userName == null || x.UserName == userName )
-                .Take( limit - list.Count )
-                .Select( x => (x, JobState.Aborted) ) );
-        if ( returnCompleted && list.Count < limit )
-            list.AddRange( _canceledJobs.Values
-                .Where( x => userName == null || x.UserName == userName )
-                .Take( limit - list.Count )
-                .Select( x => (x, JobState.Canceled) ) ); ;
-        return list;
-    }
-
     private void FillWithDefaultValues(NewJobAttributes attributes)
     {
         attributes.PrintScaling ??= _printScalingDefault;
@@ -669,5 +651,17 @@ public class PrinterJobsService
     {
         if (string.IsNullOrEmpty( attributes.DocumentFormat ))
             attributes.DocumentFormat = _documentFormatDefault;
+    }
+
+    private bool TryUpdateJob( IIppJobRequest request, Action<PrinterJob> action )
+    {
+        var id = GetJobId( request );
+        if (!id.HasValue)
+            return false;
+        if (!_jobs.TryGetValue( id.Value, out var job ))
+            return false;
+        var copy = new PrinterJob( job );
+        action( copy );
+        return _jobs.TryUpdate( id.Value, copy, job );
     }
 }

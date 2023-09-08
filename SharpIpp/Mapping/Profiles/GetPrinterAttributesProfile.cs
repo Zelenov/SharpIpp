@@ -114,11 +114,11 @@ namespace SharpIpp.Mapping.Profiles
                         map.MapFromDicSetNull<PrintScaling[]?>(src, PrinterAttribute.PrintScalingSupported),
                     QueuedJobCount = map.MapFromDic<int?>(src, PrinterAttribute.QueuedJobCount),
                     ReferenceUriSchemesSupported =
-                        map.MapFromDicSetNull<string[]?>(src, PrinterAttribute.ReferenceUriSchemesSupported),
+                        map.MapFromDicSetNull<UriScheme[]?>(src, PrinterAttribute.ReferenceUriSchemesSupported),
                     UriAuthenticationSupported =
-                        map.MapFromDicSetNull<string[]?>(src, PrinterAttribute.UriAuthenticationSupported),
+                        map.MapFromDicSetNull<UriAuthentication[]?>(src, PrinterAttribute.UriAuthenticationSupported),
                     UriSecuritySupported =
-                        map.MapFromDicSetNull<string[]?>(src, PrinterAttribute.UriSecuritySupported),
+                        map.MapFromDicSetNull<UriSecurity[]?>(src, PrinterAttribute.UriSecuritySupported),
                     MediaDefault = map.MapFromDic<string?>(src, PrinterAttribute.MediaDefault),
                     MediaColDefault = map.MapFromDic<string?>( src, PrinterAttribute.MediaColDefault ),
                     MediaSupported = map.MapFromDicSetNull<string[]?>( src, PrinterAttribute.MediaSupported ),
@@ -216,11 +216,11 @@ namespace SharpIpp.Mapping.Profiles
                     if ( src.QueuedJobCount != null )
                         dic.Add( PrinterAttribute.QueuedJobCount, new IppAttribute[] { new IppAttribute( Tag.Integer, PrinterAttribute.QueuedJobCount, src.QueuedJobCount.Value ) } );
                     if ( src.ReferenceUriSchemesSupported?.Any() ?? false )
-                        dic.Add( PrinterAttribute.ReferenceUriSchemesSupported, src.ReferenceUriSchemesSupported.Select( x => new IppAttribute( Tag.UriScheme, PrinterAttribute.ReferenceUriSchemesSupported, x ) ).ToArray() );
+                        dic.Add( PrinterAttribute.ReferenceUriSchemesSupported, src.ReferenceUriSchemesSupported.Select( x => new IppAttribute( Tag.UriScheme, PrinterAttribute.ReferenceUriSchemesSupported, map.Map<string>( x ) ) ).ToArray() );
                     if ( src.UriAuthenticationSupported?.Any() ?? false )
-                        dic.Add( PrinterAttribute.UriAuthenticationSupported, src.UriAuthenticationSupported.Select( x => new IppAttribute( Tag.Keyword, PrinterAttribute.UriAuthenticationSupported, x ) ).ToArray() );
+                        dic.Add( PrinterAttribute.UriAuthenticationSupported, src.UriAuthenticationSupported.Select( x => new IppAttribute( Tag.Keyword, PrinterAttribute.UriAuthenticationSupported, map.Map<string>( x ) ) ).ToArray() );
                     if ( src.UriSecuritySupported?.Any() ?? false )
-                        dic.Add( PrinterAttribute.UriSecuritySupported, src.UriSecuritySupported.Select( x => new IppAttribute( Tag.Keyword, PrinterAttribute.UriSecuritySupported, x ) ).ToArray() );
+                        dic.Add( PrinterAttribute.UriSecuritySupported, src.UriSecuritySupported.Select( x => new IppAttribute( Tag.Keyword, PrinterAttribute.UriSecuritySupported, map.Map<string>( x ) ) ).ToArray() );
                     if( src.MediaDefault != null )
                         dic.Add( PrinterAttribute.MediaDefault, new IppAttribute[] { new IppAttribute( Tag.Keyword, PrinterAttribute.MediaDefault, src.MediaDefault ) } );
                     if ( src.MediaColDefault != null )

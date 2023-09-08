@@ -18,7 +18,7 @@ namespace SharpIpp.Models
 
         public JobState JobState { get; set; }
 
-        public string[] JobStateReasons { get; set; } = null!;
+        public JobStateReason[] JobStateReasons { get; set; } = null!;
 
         public string? JobStateMessage { get; set; }
 

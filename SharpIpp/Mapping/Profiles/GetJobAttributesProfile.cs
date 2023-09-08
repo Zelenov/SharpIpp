@@ -89,7 +89,7 @@ namespace SharpIpp.Mapping.Profiles
                 JobSheets = map.MapFromDic<JobSheets?>(src, JobAttribute.JobSheets),
                 JobState = map.MapFromDic<JobState?>(src, JobAttribute.JobState),
                 JobStateMessage = map.MapFromDic<string?>(src, JobAttribute.JobStateMessage),
-                JobStateReasons = map.MapFromDicSetNull<string[]?>(src, JobAttribute.JobStateReasons),
+                JobStateReasons = map.MapFromDicSetNull<JobStateReason[]?>(src, JobAttribute.JobStateReasons),
                 Media = map.MapFromDic<string?>(src, JobAttribute.Media),
                 MultipleDocumentHandling =
                     map.MapFromDic<MultipleDocumentHandling?>(src, JobAttribute.MultipleDocumentHandling),
@@ -155,7 +155,7 @@ namespace SharpIpp.Mapping.Profiles
                 if ( src.JobStateMessage != null )
                     dic.Add( JobAttribute.JobStateMessage, new IppAttribute[] { new IppAttribute( Tag.TextWithoutLanguage, JobAttribute.JobStateMessage, src.JobStateMessage ) } );
                 if (src.JobStateReasons?.Any() ?? false)
-                    dic.Add( JobAttribute.JobStateReasons, src.JobStateReasons.Select( x => new IppAttribute( Tag.Keyword, JobAttribute.JobStateReasons, x ) ).ToArray() );
+                    dic.Add( JobAttribute.JobStateReasons, src.JobStateReasons.Select( x => new IppAttribute( Tag.Keyword, JobAttribute.JobStateReasons, map.Map<string>( x ) ) ).ToArray() );
                 if ( src.Media != null )
                     dic.Add( JobAttribute.Media, new IppAttribute[] { new IppAttribute( Tag.Keyword, JobAttribute.Media, src.Media ) } );
                 if ( src.MultipleDocumentHandling != null )

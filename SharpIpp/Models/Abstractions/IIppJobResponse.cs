@@ -23,7 +23,7 @@ namespace SharpIpp.Models
         /// <summary>
         ///     job-state-reasons
         /// </summary>
-        public string[] JobStateReasons { get; set; }
+        public JobStateReason[] JobStateReasons { get; set; }
 
         /// <summary>
         ///     job-state-message
