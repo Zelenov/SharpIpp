@@ -7,12 +7,12 @@ using SharpIpp.Models;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.Options;
 using SharpIpp.Exceptions;
-using System.Linq;
 
 namespace SharpIppServerExample.Services;
 
-public class PrinterJobsService
+public class PrinterJobsService : IDisposable, IAsyncDisposable
 {
+    private bool disposedValue;
     private int _newJobIndex = 0;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ILogger<PrinterJobsService> _logger;
@@ -70,7 +70,7 @@ public class PrinterJobsService
                 PausePrinterRequest x => GetPausePrinterResponse(x),
                 PrintJobRequest x => await GetPrintJobResponseAsync(x),
                 PrintUriRequest x => GetPrintUriResponse(x),
-                PurgeJobsRequest x => GetPurgeJobsResponse(x),
+                PurgeJobsRequest x => await GetPurgeJobsResponseAsync( x),
                 ReleaseJobRequest x => await GetReleaseJobResponseAsync(x),
                 RestartJobRequest x => await GetRestartJobResponseAsync(x),
                 ResumePrinterRequest x => GetResumePrinterResponse(x),
@@ -232,10 +232,13 @@ public class PrinterJobsService
         return response;
     }
 
-    private PurgeJobsResponse GetPurgeJobsResponse( PurgeJobsRequest request )
+    private async Task<PurgeJobsResponse> GetPurgeJobsResponseAsync( PurgeJobsRequest request )
     {
-        foreach (var job in _jobs.Values.Where( x => x.IsNew || x.IsHold || x.State == JobState.Pending ))
-            _jobs.TryRemove( job.Id, out _ );
+        foreach (var id in _jobs.Values.Where( x => x.State != JobState.Processing ).Select(x => x.Id))
+        {
+            if (_jobs.TryRemove( id, out var job ))
+                await job.DisposeAsync();
+        }
         return new PurgeJobsResponse
         {
             RequestId = request.RequestId,
@@ -259,7 +262,7 @@ public class PrinterJobsService
         request.DocumentAttributes ??= new();
         FillWithDefaultValues( request.DocumentAttributes );
         request.NewJobAttributes ??= new();
-        FillWithDefaultValues( request.NewJobAttributes );
+        FillWithDefaultValues( job.Id, request.NewJobAttributes );
         job.Requests.Add( request );
         if (!_jobs.TryAdd( job.Id, job ))
             return response;
@@ -448,15 +451,6 @@ public class PrinterJobsService
             SendUriRequest sendUriRequest => sendUriRequest.DocumentAttributes,
             _ => null,
         }).FirstOrDefault( x => x != null );
-        var userName = job.Requests.Select( x => x switch
-        {
-            CreateJobRequest createJobRequest => createJobRequest.RequestingUserName,
-            PrintJobRequest printJobRequest => printJobRequest.RequestingUserName,
-            PrintUriRequest printUriRequest => printUriRequest.RequestingUserName,
-            SendDocumentRequest sendDocumentRequest => sendDocumentRequest.RequestingUserName,
-            SendUriRequest sendUriRequest => sendUriRequest.RequestingUserName,
-            _ => null,
-        } ).FirstOrDefault( x => x != null );
         bool IsRequired( string attributeName ) => (requestedAttributes?.Contains( "all" ) ?? false) || (requestedAttributes?.Contains( attributeName ) ?? !isBatch);
         var attributes = new JobAttributes
         {
@@ -478,7 +472,7 @@ public class PrinterJobsService
             Finishings = !IsRequired( JobAttribute.Finishings ) ? null : jobAttributes?.Finishings,
             IppAttributeFidelity = !IsRequired( JobAttribute.IppAttributeFidelity ) ? null : jobAttributes?.IppAttributeFidelity,
             JobName = !IsRequired( JobAttribute.JobName ) ? null : jobAttributes?.JobName,
-            JobOriginatingUserName = !IsRequired( JobAttribute.JobOriginatingUserName ) ? null : userName,
+            JobOriginatingUserName = !IsRequired( JobAttribute.JobOriginatingUserName ) ? null : job.UserName,
             MultipleDocumentHandling = !IsRequired( JobAttribute.MultipleDocumentHandling ) ? null : jobAttributes?.MultipleDocumentHandling,
             NumberUp = !IsRequired( JobAttribute.NumberUp ) ? null : jobAttributes?.NumberUp,
             OrientationRequested = !IsRequired( JobAttribute.OrientationRequested ) ? null : jobAttributes?.OrientationRequested,
@@ -486,7 +480,7 @@ public class PrinterJobsService
             Media = !IsRequired( JobAttribute.Media ) ? null : jobAttributes?.Media,
             PrintQuality = !IsRequired( JobAttribute.PrintQuality ) ? null : jobAttributes?.PrintQuality,
             Sides = !IsRequired( JobAttribute.Sides ) ? null : jobAttributes?.Sides,
-            JobPrinterUpTime = !IsRequired( JobAttribute.JobPrinterUpTime ) ? null : (int)(DateTimeOffset.UtcNow - _startTime).TotalSeconds,
+            JobPrinterUpTime = !IsRequired( JobAttribute.JobPrinterUpTime ) ? null : (int)(DateTimeOffset.UtcNow - _startTime).TotalSeconds
         };
         return attributes;
     }
@@ -515,7 +509,7 @@ public class PrinterJobsService
         response.JobId = job.Id;
         response.JobUri = $"{GetPrinterUrl()}/{job.Id}";
         request.NewJobAttributes ??= new();
-        FillWithDefaultValues( request.NewJobAttributes );
+        FillWithDefaultValues( job.Id, request.NewJobAttributes );
         job.Requests.Add( request );
         if (!_jobs.TryAdd( job.Id, job ))
             return response;
@@ -601,7 +595,7 @@ public class PrinterJobsService
         response.JobId = job.Id;
         response.JobUri = $"{GetPrinterUrl()}/{job.Id}";
         request.NewJobAttributes ??= new();
-        FillWithDefaultValues( request.NewJobAttributes );
+        FillWithDefaultValues( job.Id, request.NewJobAttributes );
         request.DocumentAttributes ??= new();
         FillWithDefaultValues( request.DocumentAttributes );
         job.Requests.Add( request );
@@ -633,7 +627,7 @@ public class PrinterJobsService
         return request.JobId;
     }
 
-    private void FillWithDefaultValues(NewJobAttributes attributes)
+    private void FillWithDefaultValues(int jobId, NewJobAttributes attributes)
     {
         attributes.PrintScaling ??= _printScalingDefault;
         attributes.Sides ??= _sidesDefault;
@@ -645,6 +639,8 @@ public class PrinterJobsService
         attributes.Copies ??= _copiesDefault;
         attributes.OrientationRequested ??= _orientationRequestedDefault;
         attributes.JobHoldUntil ??= _jobHoldUntil;
+        if (string.IsNullOrEmpty( attributes.JobName ))
+            attributes.JobName = $"Job {jobId}";
     }
 
     private void FillWithDefaultValues(DocumentAttributes attributes)
@@ -653,15 +649,36 @@ public class PrinterJobsService
             attributes.DocumentFormat = _documentFormatDefault;
     }
 
-    private bool TryUpdateJob( IIppJobRequest request, Action<PrinterJob> action )
+    public async ValueTask DisposeAsync()
     {
-        var id = GetJobId( request );
-        if (!id.HasValue)
-            return false;
-        if (!_jobs.TryGetValue( id.Value, out var job ))
-            return false;
-        var copy = new PrinterJob( job );
-        action( copy );
-        return _jobs.TryUpdate( id.Value, copy, job );
+        await DisposeAsyncCore().ConfigureAwait( false );
+        Dispose( disposing: false );
+        GC.SuppressFinalize( this );
+    }
+
+    protected virtual async ValueTask DisposeAsyncCore()
+    {
+        foreach (var job in _jobs.Values)
+            await job.DisposeAsync();
+        _jobs.Clear();
+    }
+
+    protected virtual void Dispose( bool disposing )
+    {
+        if (disposedValue)
+            return;
+        if (disposing)
+        {
+            foreach (var job in _jobs.Values)
+                job.Dispose();
+            _jobs.Clear();
+        }
+        disposedValue = true;
+    }
+
+    public void Dispose()
+    {
+        Dispose( disposing: true );
+        GC.SuppressFinalize( this );
     }
 }

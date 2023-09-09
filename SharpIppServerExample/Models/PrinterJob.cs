@@ -1,12 +1,12 @@
 ﻿using SharpIpp.Models;
-using SharpIpp.Protocol;
 using SharpIpp.Protocol.Models;
-using static Quartz.Logging.OperationName;
 
 namespace SharpIppServerExample.Models;
 
-public class PrinterJob : IEquatable<PrinterJob>
+public class PrinterJob : IEquatable<PrinterJob>, IDisposable, IAsyncDisposable
 {
+    private bool disposedValue;
+
     public PrinterJob( int id, string? userName, DateTimeOffset createdDateTime )
     {
         Id = id;
@@ -14,6 +14,10 @@ public class PrinterJob : IEquatable<PrinterJob>
         CreatedDateTime = createdDateTime;
     }
 
+    /// <summary>
+    /// Create shallow copy of the original object
+    /// </summary>
+    /// <param name="printerJob"></param>
     public PrinterJob( PrinterJob printerJob )
     {
         Id = printerJob.Id;
@@ -82,34 +86,13 @@ public class PrinterJob : IEquatable<PrinterJob>
                 ProcessingDateTime = dateTime;
                 return true;
             case JobState.Canceled when !State.HasValue || State == JobState.Pending:
-                foreach (var ippRequest in Requests)
-                {
-                    var document = ippRequest switch
-                    {
-                        PrintJobRequest printJobRequest => printJobRequest.Document,
-                        SendDocumentRequest sendDocumentRequest => sendDocumentRequest.Document,
-                        _ => null
-                    };
-                    if (document != null)
-                        await document.DisposeAsync();
-                }
+                await ClearDocumentStreamsAsync();
                 State = state;
                 ProcessingDateTime = dateTime;
                 CompletedDateTime = dateTime;
                 return true;
             case JobState.Completed when State == JobState.Processing:
-            
-                foreach (var ippRequest in Requests)
-                {
-                    var document = ippRequest switch
-                    {
-                        PrintJobRequest printJobRequest => printJobRequest.Document,
-                        SendDocumentRequest sendDocumentRequest => sendDocumentRequest.Document,
-                        _ => null
-                    };
-                    if (document != null)
-                        await document.DisposeAsync();
-                }
+                await ClearDocumentStreamsAsync();
                 State = state;
                 CompletedDateTime = dateTime;
                 return true;
@@ -120,5 +103,76 @@ public class PrinterJob : IEquatable<PrinterJob>
             default:
                 return false;
         }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await DisposeAsyncCore().ConfigureAwait( false );
+        Dispose( disposing: false );
+        GC.SuppressFinalize( this );
+    }
+
+    protected virtual async ValueTask ClearDocumentStreamsAsync()
+    {
+        foreach (var ippRequest in Requests)
+        {
+            switch (ippRequest)
+            {
+                case PrintJobRequest printJobRequest when printJobRequest.Document != null:
+                    await printJobRequest.Document.DisposeAsync().ConfigureAwait( false );
+                    printJobRequest.Document = Stream.Null;
+                    break;
+                case SendDocumentRequest sendDocumentRequest when sendDocumentRequest.Document != null:
+                    await sendDocumentRequest.Document.DisposeAsync().ConfigureAwait( false );
+                    sendDocumentRequest.Document = Stream.Null;
+                    break;
+            }
+        }
+    }
+
+    protected virtual async ValueTask DisposeAsyncCore()
+    {
+        foreach (var ippRequest in Requests)
+        {
+            switch (ippRequest)
+            {
+                case PrintJobRequest printJobRequest when printJobRequest.Document != null:
+                    await printJobRequest.Document.DisposeAsync().ConfigureAwait( false );
+                    break;
+                case SendDocumentRequest sendDocumentRequest when sendDocumentRequest.Document != null:
+                    await sendDocumentRequest.Document.DisposeAsync().ConfigureAwait( false );
+                    break;
+            }
+        }
+        Requests.Clear();
+    }
+
+    protected virtual void Dispose( bool disposing )
+    {
+        if (disposedValue)
+            return;
+        if (disposing)
+        {
+            foreach (var ippRequest in Requests)
+            {
+                switch (ippRequest)
+                {
+                    case PrintJobRequest printJobRequest when printJobRequest.Document != null:
+                        printJobRequest.Document.Dispose();
+                        break;
+                    case SendDocumentRequest sendDocumentRequest when sendDocumentRequest.Document != null:
+                        sendDocumentRequest.Document.Dispose();
+                        break;
+                }
+            }
+            Requests.Clear();
+        }
+        disposedValue = true;
+    }
+
+    public void Dispose()
+    {
+        Dispose( disposing: true );
+        GC.SuppressFinalize( this );
     }
 }

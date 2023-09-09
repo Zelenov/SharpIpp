@@ -20,7 +20,7 @@
         public const string JobMediaSheetsCompleted = "job-media-sheets-completed";
         public const string JobName = "job-name";
         public const string JobOriginatingUserName = "job-originating-user-name";
-        public const string JobOriginatingUserNameLanguage = "job-originating-user-name";
+        public const string JobOriginatingUserNameLanguage = "job-originating-user-name-language";
         public const string JobPrinterUpTime = "job-printer-up-time";
         public const string JobPrinterUri = "job-printer-uri";
         public const string JobSheets = "job-sheets";
