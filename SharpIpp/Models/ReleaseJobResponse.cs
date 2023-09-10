@@ -10,7 +10,7 @@ namespace SharpIpp.Models
     /// </summary>
     public class ReleaseJobResponse : IIppResponseMessage
     {
-        public IppVersion Version { get; set; }
+        public IppVersion Version { get; set; } = IppVersion.V11;
 
         public IppStatusCode StatusCode { get; set; }
 

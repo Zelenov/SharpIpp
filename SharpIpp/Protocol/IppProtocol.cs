@@ -44,7 +44,7 @@ namespace SharpIpp.Protocol
             }
 
             using var writer = new BinaryWriter(stream, Encoding.ASCII, true);
-            writer.WriteBigEndian( (short)ippRequestMessage.Version );
+            writer.WriteBigEndian( ippRequestMessage.Version.ToInt16BigEndian() );
             writer.WriteBigEndian( (short)ippRequestMessage.IppOperation );
             writer.WriteBigEndian( ippRequestMessage.RequestId );
             WriteSection(ippRequestMessage, writer);
@@ -68,7 +68,7 @@ namespace SharpIpp.Protocol
             try
             {
                 using var reader = new BinaryReader(stream, Encoding.ASCII, true);
-                res.Version = (IppVersion)reader.ReadInt16BigEndian();
+                res.Version = new IppVersion( reader.ReadInt16BigEndian() );
                 res.StatusCode = (IppStatusCode)reader.ReadInt16BigEndian();
                 res.RequestId = reader.ReadInt32BigEndian();
                 ReadSection(reader, res);
@@ -213,7 +213,7 @@ namespace SharpIpp.Protocol
                 throw new ArgumentException( $"{nameof( stream )}" );
             }
             using var writer = new BinaryWriter( stream, Encoding.ASCII, true );
-            writer.WriteBigEndian( (short)ippResponseMessage.Version );
+            writer.WriteBigEndian( ippResponseMessage.Version.ToInt16BigEndian() );
             writer.WriteBigEndian( (short)ippResponseMessage.StatusCode );
             writer.WriteBigEndian( ippResponseMessage.RequestId );
             WriteSection( ippResponseMessage, writer );
@@ -320,7 +320,7 @@ namespace SharpIpp.Protocol
         {
             IppRequestMessage message = new IppRequestMessage
             {
-                Version = (IppVersion)reader.ReadInt16BigEndian(),
+                Version = new IppVersion( reader.ReadInt16BigEndian() ),
                 IppOperation = (IppOperation)reader.ReadInt16BigEndian(),
                 RequestId = reader.ReadInt32BigEndian()
             };
@@ -328,6 +328,13 @@ namespace SharpIpp.Protocol
             message.Document = new MemoryStream();
             await reader.BaseStream.CopyToAsync( message.Document );
             return message;
+        }
+
+        public Version GetIppVersion(short value)
+        {
+            byte[] bytes = BitConverter.GetBytes( value );
+
+            return new Version( bytes[ 0 ], bytes[ 1 ] );
         }
 
         public void WriteSection(IIppRequestMessage requestMessage, BinaryWriter writer)
