@@ -76,7 +76,7 @@ namespace SharpIpp.Mapping.Profiles
                     GeneratedNaturalLanguageSupported =
                         map.MapFromDicSetNull<string[]?>(src, PrinterAttribute.GeneratedNaturalLanguageSupported),
                     IppVersionsSupported =
-                        map.MapFromDicSetNull<string[]?>(src, PrinterAttribute.IppVersionsSupported),
+                        map.MapFromDicSetNull<IppVersion[]?>(src, PrinterAttribute.IppVersionsSupported),
                     JobImpressionsSupported = map.MapFromDic<Range?>(src, PrinterAttribute.JobImpressionsSupported),
                     JobKOctetsSupported = map.MapFromDic<Range?>(src, PrinterAttribute.JobKOctetsSupported),
                     JobMediaSheetsSupported = map.MapFromDic<Range?>(src, PrinterAttribute.JobMediaSheetsSupported),
@@ -158,7 +158,7 @@ namespace SharpIpp.Mapping.Profiles
                     if ( src.GeneratedNaturalLanguageSupported?.Any() ?? false )
                         dic.Add( PrinterAttribute.GeneratedNaturalLanguageSupported, src.GeneratedNaturalLanguageSupported.Select( x => new IppAttribute( Tag.NaturalLanguage, PrinterAttribute.GeneratedNaturalLanguageSupported, x ) ).ToArray() );
                     if ( src.IppVersionsSupported?.Any() ?? false )
-                        dic.Add( PrinterAttribute.IppVersionsSupported, src.IppVersionsSupported.Select( x => new IppAttribute( Tag.Keyword, PrinterAttribute.IppVersionsSupported, x ) ).ToArray() );
+                        dic.Add( PrinterAttribute.IppVersionsSupported, src.IppVersionsSupported.Select( x => new IppAttribute( Tag.Keyword, PrinterAttribute.IppVersionsSupported, x.ToString() ) ).ToArray() );
                     if ( src.JobImpressionsSupported != null )
                         dic.Add( PrinterAttribute.JobImpressionsSupported, new IppAttribute[] { new IppAttribute( Tag.RangeOfInteger, PrinterAttribute.JobImpressionsSupported, src.JobImpressionsSupported.Value ) } );
                     if ( src.JobKOctetsSupported != null )

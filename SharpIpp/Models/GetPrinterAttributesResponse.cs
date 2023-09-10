@@ -76,7 +76,7 @@ namespace SharpIpp.Models
         /// <summary>
         ///     ipp-versions-supported
         /// </summary>
-        public string[]? IppVersionsSupported { get; set; }
+        public IppVersion[]? IppVersionsSupported { get; set; }
 
         /// <summary>
         ///     operations-supported

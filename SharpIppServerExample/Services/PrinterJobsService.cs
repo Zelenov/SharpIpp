@@ -325,7 +325,7 @@ public class PrinterJobsService : IDisposable, IAsyncDisposable
             PrinterMakeAndModel = !IsRequired( PrinterAttribute.PrinterMakeAndModel) ? null : options.Name,
             PrinterName = !IsRequired( PrinterAttribute.PrinterName) ? null : options.Name,
             PrinterInfo = !IsRequired( PrinterAttribute.PrinterInfo) ? null : options.Name,
-            IppVersionsSupported = !IsRequired( PrinterAttribute.IppVersionsSupported) ? null : new string[] { "1.0", "1.1" },
+            IppVersionsSupported = !IsRequired( PrinterAttribute.IppVersionsSupported ) ? null : new[] { new IppVersion( 1, 0 ), IppVersion.V11 },
             DocumentFormatDefault = !IsRequired( PrinterAttribute.DocumentFormatDefault) ? null : _documentFormatDefault,
             ColorSupported = !IsRequired( PrinterAttribute.ColorSupported) ? null : true,
             PrinterCurrentTime = !IsRequired( PrinterAttribute.PrinterCurrentTime) ? null : DateTimeOffset.Now,

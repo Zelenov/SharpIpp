@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 
 namespace SharpIpp.Protocol.Models
 {
@@ -17,6 +18,13 @@ namespace SharpIpp.Protocol.Models
         {
             Major = major;
             Minor = minor;
+        }
+
+        public IppVersion( string version )
+        {
+            var parts = version.Split( '.' ).Select( byte.Parse ).ToList();
+            Major = parts.FirstOrDefault();
+            Minor = parts.Skip( 1 ).FirstOrDefault();
         }
 
         public static IppVersion V11 { get; } = new( 1, 1 );
