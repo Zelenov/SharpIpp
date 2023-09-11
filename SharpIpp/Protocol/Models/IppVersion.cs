@@ -69,5 +69,19 @@ namespace SharpIpp.Protocol.Models
         {
             return !Equals( left, right );
         }
+
+        public static bool operator <( IppVersion? left, IppVersion? right )
+        {
+            if (left != null && right != null)
+                return left.CompareTo( right ) < 0;
+            return left == null && right != null;
+        }
+
+        public static bool operator >( IppVersion? left, IppVersion? right )
+        {
+            if (left != null && right != null)
+                return left.CompareTo( right ) > 0;
+            return left != null && right == null;
+        }
     }
 }

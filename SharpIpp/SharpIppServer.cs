@@ -72,7 +72,7 @@ public partial class SharpIppServer
             throw new IppRequestException( "attributes-charset MUST be the first attribute", request, IppStatusCode.ClientErrorBadRequest );
         if (request.OperationAttributes.Skip(1).FirstOrDefault()?.Name != JobAttribute.AttributesNaturalLanguage)
             throw new IppRequestException( "attributes-natural-language MUST be the second attribute", request, IppStatusCode.ClientErrorBadRequest );
-        if (request.Version == new IppVersion( 0, 0 ))
+        if (request.Version < new IppVersion( 1, 0 ))
             throw new IppRequestException( "Unsupported IPP version", request, IppStatusCode.ServerErrorVersionNotSupported );
         if (!request.OperationAttributes.Any(x => x.Name == JobAttribute.PrinterUri))
             throw new IppRequestException( "No printer-uri operation attribute", request, IppStatusCode.ClientErrorBadRequest );
