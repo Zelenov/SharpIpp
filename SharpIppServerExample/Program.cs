@@ -27,6 +27,7 @@ builder.Services
     .AddQuartzHostedService( q => q.WaitForJobsToComplete = true );
 var app = builder.Build();
 var printerOptions = app.Services.GetRequiredService<IOptions<PrinterOptions>>().Value;
+app.UseMiddleware<SecurityHeadersMiddleware>();
 app.UseCors(x => x.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader() );
 app.MapGet( "/", () => "IPP printer" );
 new List<string>
