@@ -64,7 +64,7 @@ namespace SharpIpp
             IIppRequestMessage ippRequest,
             CancellationToken cancellationToken = default)
         {
-            var httpPrinter = new UriBuilder(printer) { Scheme = "http", Port = printer.Port }.Uri;
+            var httpPrinter = new UriBuilder(printer).Uri;
             var httpRequest = new HttpRequestMessage(HttpMethod.Post, httpPrinter);
 
             HttpResponseMessage? response;
