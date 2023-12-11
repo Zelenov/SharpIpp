@@ -64,7 +64,7 @@ namespace SharpIpp
             IIppRequestMessage ippRequest,
             CancellationToken cancellationToken = default)
         {
-            var httpPrinter = new UriBuilder(printer) { Scheme = "http", Port = printer.Port }.Uri;
+            var httpPrinter = TranslateScheme(printer);
             var httpRequest = new HttpRequestMessage(HttpMethod.Post, httpPrinter);
 
             HttpResponseMessage? response;
@@ -129,6 +129,27 @@ namespace SharpIpp
             }
 
             throw httpException;
+        }
+
+        private Uri TranslateScheme(Uri printer)
+        {
+            UriBuilder builder = new(printer);
+            if (printer.Scheme == "ipp")
+            {
+                builder.Scheme = "http";
+                if(printer.IsDefaultPort) {
+                    builder.Port = 631;
+                }
+            }
+            else if (printer.Scheme == "ipps")
+            {
+                builder.Scheme = "https";
+                if(printer.IsDefaultPort) {
+                    builder.Port = 631;
+                }
+            }
+
+            return builder.Uri;
         }
 
         public void Dispose()
